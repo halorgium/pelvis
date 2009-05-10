@@ -1,0 +1,86 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'eventmachine'
+require 'hmac-sha2'
+
+require 'router'
+require 'agent'
+require 'job'
+
+require 'outcall'
+require 'evocation'
+
+require 'incall'
+require 'invocation'
+
+require 'logger'
+LOGGER = Logger.new($stderr)
+
+class DoSomething
+  def self.call(invocation)
+    new(invocation)
+  end
+
+  def initialize(invocation)
+    @invocation = invocation
+    send_wait(rand(10))
+  end
+
+  def send_wait(number)
+    @invocation.receive("data #{@invocation.job.token}")
+    EM.add_timer(random_time) do
+      if number == 0
+        @invocation.complete("completed: #{@invocation.job.token}")
+      else
+        send_wait(number - 1)
+      end
+    end
+  end
+
+  def random_time
+    rand(200) / 100.0 + 2
+  end
+end
+
+MY_LOGGER = Logger.new($stdout)
+
+def simple(agent, *args)
+  request = agent.request(*args) do
+    def receive(data)
+      MY_LOGGER.debug "received data: #{data.inspect}"
+    end
+
+    def complete(event)
+      MY_LOGGER.debug "Completed with #{event.inspect}"
+    end
+  end
+end
+
+def console(obj)
+  ARGV.clear # Avoid passing args to IRB
+
+  require "irb"
+  IRB.setup(nil)
+  irb = IRB::Irb.new(IRB::WorkSpace.new(obj.send(:binding)))
+  IRB.conf[:MAIN_CONTEXT] = irb.context
+
+  old = trap(:INT) { irb.signal_handle }
+  Thread.start do
+    catch(:IRB_EXIT) { irb.eval_input }
+    trap(:INT, old)
+    puts
+    puts "Ready to stop"
+    EM.stop
+  end
+end
+
+Router.start do |router|
+  foo = router.agent("foo")
+  bar = router.agent("bar")
+  simple(foo, "/foo", {:hello => "test"}, :identities => ["bar"])
+  simple(foo, "/foo", {:hello => "test"}, :identities => ["bar"])
+  simple(foo, "/foo", {:hello => "test"}, :identities => ["bar"])
+
+  #console(bar)
+end
