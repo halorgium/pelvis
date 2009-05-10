@@ -1,21 +1,8 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-require 'eventmachine'
-require 'hmac-sha2'
 
-require 'router'
-require 'agent'
-require 'job'
-
-require 'outcall'
-require 'evocation'
-
-require 'incall'
-require 'invocation'
-
-require 'logger'
-LOGGER = Logger.new($stderr)
+require File.dirname(__FILE__) + '/lib/pelvis'
 
 class DoSomething
   def self.call(invocation)
@@ -43,6 +30,7 @@ class DoSomething
   end
 end
 
+require 'logger'
 MY_LOGGER = Logger.new($stdout)
 
 def simple(agent, *args)
@@ -75,7 +63,7 @@ def console(obj)
   end
 end
 
-Router.start do |router|
+Pelvis::Router.start do |router|
   foo = router.agent("foo")
   bar = router.agent("bar")
   simple(foo, "/foo", {:hello => "test"}, :identities => ["bar"])
