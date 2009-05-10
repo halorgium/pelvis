@@ -6,19 +6,18 @@ module Pelvis
       new(*args).start
     end
 
-    def initialize(router, identity)
-      @router, @identity = router, identity
+    def initialize(router, identity, actors)
+      @router, @identity, @actors = router, identity, actors
     end
-    attr_reader :router, :identity
+    attr_reader :router, :identity, :actors
 
     def start
       LOGGER.debug "Starting an agent: #{@identity.inspect}"
       self
     end
 
-    def request(operation, args, options, &block)
-      klass = Class.new(Job, &block)
-      job = klass.new(self, gen_token, operation, args, options)
+    def request(operation, args, options, parent = nil, &block)
+      job = Job.create(gen_token, operation, args, options, parent, &block)
       o = Outcall.start(self, job)
       o.callback do |r|
         LOGGER.debug "outcall callback: #{r.inspect}"
@@ -35,6 +34,14 @@ module Pelvis
       when :init
         Incall.start(self, message)
       end
+    end
+
+    def operations_for(job)
+      operations = []
+      @actors.each do |actor|
+        operations += actor.operations_for(job)
+      end
+      operations
     end
 
     def gen_token

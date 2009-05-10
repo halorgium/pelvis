@@ -15,13 +15,14 @@ module Pelvis
       LOGGER.debug "starting incall on #{@agent.identity}: #{@evocation.inspect}"
       # TODO: This needs to authorize the job
       operations.each do |o|
-        invoke(o)
+        invoke(*o)
       end
+      check_complete
       self
     end
 
-    def invoke(operation)
-      i = Invocation.start(self, operation)
+    def invoke(actor_klass, operation)
+      i = Invocation.start(self, actor_klass, operation)
       invocations << i
       i.callback do |r|
         LOGGER.debug "callback from #{operation}: #{r.inspect}"
@@ -39,10 +40,16 @@ module Pelvis
     end
 
     def check_complete
+      return if complete?
       if invocations.all? {|e| e.complete?}
         LOGGER.debug "All invocations are finished"
+        @complete = true
         succeed "Done at #{Time.now}"
       end
+    end
+
+    def complete?
+      @complete
     end
 
     def router
@@ -57,12 +64,8 @@ module Pelvis
       @invocations ||= []
     end
 
-    # TODO: This needs to hook into the agent and locate the valid operations
     def operations
-      return @operations if @operations
-      @operations = []
-      @operations << DoSomething
-      @operations
+      @agent.operations_for(job)
     end
 
     def inspect

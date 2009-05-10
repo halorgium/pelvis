@@ -6,6 +6,7 @@ $:.unshift File.dirname(__FILE__)
 require 'pelvis/router'
 require 'pelvis/agent'
 require 'pelvis/job'
+require 'pelvis/actor'
 
 require 'pelvis/outcall'
 require 'pelvis/evocation'

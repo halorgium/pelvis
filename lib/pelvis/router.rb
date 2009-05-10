@@ -12,8 +12,8 @@ module Pelvis
       end
     end
 
-    def agent(identity)
-      agent = Agent.start(self, identity)
+    def agent(*args)
+      agent = Agent.start(self, *args)
       local_agents << agent
       agent
     end

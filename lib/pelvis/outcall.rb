@@ -16,6 +16,7 @@ module Pelvis
       identities.each do |i|
         evoke(i)
       end
+      check_complete
       self
     end
 
@@ -38,11 +39,17 @@ module Pelvis
     end
 
     def check_complete
+      return if complete?
       if evocations.all? {|e| e.complete?}
         LOGGER.debug "All evocations are complete"
+        @complete = true
         @job.complete("win")
         succeed "Done at #{Time.now}"
       end
+    end
+
+    def complete?
+      @complete
     end
 
     def router

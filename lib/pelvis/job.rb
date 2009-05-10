@@ -1,9 +1,18 @@
 module Pelvis
   class Job
-    def initialize(agent, token, operation, args, options)
-      @agent, @token, @operation, @args, @options = agent, token, operation, args, options
+    def self.create(token, operation, args, options, parent, &block)
+      klass = Job
+      if block_given?
+        klass = Class.new(Job, &block)
+      end
+      klass.new(token, operation, args, options, parent)
     end
-    attr_reader :agent, :token, :operation, :args, :options
+
+    def initialize(token, operation, args, options, parent)
+      @token, @operation, @args, @options, @parent = token, operation, args, options, parent
+      @token << ":#{@parent.job.token}" if @parent
+    end
+    attr_reader :token, :operation, :args, :options, :parent
 
     def receive(data)
       LOGGER.debug "data: Doing nothing with #{data.inspect}"
