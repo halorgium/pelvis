@@ -1,10 +1,19 @@
 module Pelvis
   class Job
     def self.create(token, operation, args, options, parent, &block)
+      mod = options[:callback]
+      raise "Do not specify a callback module and a block" if mod && block_given?
+
       klass = Job
       if block_given?
         klass = Class.new(Job, &block)
       end
+      if mod
+        klass = Class.new(Job) do
+          include mod
+        end
+      end
+
       klass.new(token, operation, args, options, parent)
     end
 

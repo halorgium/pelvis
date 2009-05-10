@@ -4,15 +4,17 @@ class Chained < Pelvis::Actor
     invocation.receive "starting chained"
     identities = invocation.job.args[:rcpts]
     10.times do |number|
-      invocation.request("/inner", {:number => number}, {:identities => identities}) do
-        def receive(data)
-          parent.receive data
-        end
+      invocation.request("/inner", {:number => number}, :callback => ProxyBack, :identities => identities)
+    end
+  end
 
-        def complete(data)
-          parent.actor.complete(args[:number])
-        end
-      end
+  module ProxyBack
+    def receive(data)
+      parent.receive data
+    end
+
+    def complete(data)
+      parent.actor.complete(args[:number])
     end
   end
 

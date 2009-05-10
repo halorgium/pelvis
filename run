@@ -7,26 +7,25 @@ require File.dirname(__FILE__) + '/lib/pelvis'
 require File.dirname(__FILE__) + '/examples/actors/randomz'
 require File.dirname(__FILE__) + '/examples/actors/chained'
 
-def simple(agent, *args)
-  request = agent.request(*args) do
-    def receive(data)
-      log "Received data: #{data.inspect}"
-    end
+module Logging
+  def receive(data)
+    log "Received data: #{data.inspect}"
+  end
 
-    def complete(event)
-      log "Completed with #{event.inspect}"
-    end
+  def complete(event)
+    log "Completed with #{event.inspect}"
+  end
 
-    def log(message)
-      puts "%0.7f: %s" % [Time.now.to_f, message]
-    end
+  def log(message)
+    puts "%0.7f: %s" % [Time.now.to_f, message]
   end
 end
 
 Pelvis::Router.start do |router|
   foo = router.agent("foo", [Randomz, Chained])
   bar = router.agent("bar", [Randomz, Chained])
-  simple(foo, "/chained", {:rcpts => ["foo"]}, :identities => ["bar"])
+
+  foo.request("/chained", {:rcpts => ["foo"]}, :callback => Logging, :identities => ["bar"])
 
   #console(bar)
 end
