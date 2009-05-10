@@ -13,10 +13,7 @@ module Pelvis
 
     def start
       LOGGER.debug "starting outcall on #{@agent.identity}: #{inspect}"
-      identities.each do |i|
-        evoke(i)
-      end
-      check_complete
+      discover
       self
     end
 
@@ -60,19 +57,39 @@ module Pelvis
       @evocations ||= []
     end
 
-    # TODO: This needs to support discovery
-    def identities
+    def discover
       if identities = @job.options[:identities]
-        identities
+        identities.each do |i|
+          evoke(i)
+        end
       else
-        raise "You need to specify the identities until discovery works"
+        discover_with_herault
+      end
+    end
+
+    def discover_with_herault
+      @agent.request("/security/discover",
+                     {:operation => job.operation, :args => job.args},
+                     {:identities => ["herault"]},
+                     self) do
+        def receive(data)
+          @identities ||= []
+          @identities += data
+        end
+
+        def complete(data)
+          return unless @identities
+          @identities.each do |i|
+            parent.evoke(i)
+          end
+        end
       end
     end
 
     def inspect
       "#<#{self.class} agent=#{@agent.inspect} " \
-        "token=#{@token.inspect} operation=#{@operation.inspect} " \
-        "args=#{@args.inspect} options=#{@options.inspect}>"
+        "token=#{@job.token.inspect} operation=#{@job.operation.inspect} " \
+        "args=#{@job.args.inspect} options=#{@job.options.inspect}>"
     end
   end
 end

@@ -13,6 +13,7 @@ module Pelvis
 
     def start
       LOGGER.debug "Starting an agent: #{@identity.inspect}"
+      advertise
       self
     end
 
@@ -26,6 +27,27 @@ module Pelvis
         LOGGER.debug "outcall errback: #{r.inspect}"
       end
       o
+    end
+
+    def advertise
+      if @identity == "herault"
+        LOGGER.debug "Not advertising cause I am herault"
+        return
+      end
+
+      args = {:identity => @identity, :operations => []}
+      @actors.each do |actor|
+        args[:operations] += actor.provided_operations
+      end
+      request("/security/advertise", args, {:identities => ["herault"]}) do
+        def complete(data)
+          LOGGER.debug "Advertised successfully"
+        end
+
+        def error(data)
+          LOGGER.debug "Failed to advertise"
+        end
+      end
     end
 
     def receive(type, message)

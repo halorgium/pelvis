@@ -4,8 +4,10 @@ require 'rubygems'
 
 require File.dirname(__FILE__) + '/lib/pelvis'
 
+require File.dirname(__FILE__) + '/examples/actors/herault'
 require File.dirname(__FILE__) + '/examples/actors/randomz'
 require File.dirname(__FILE__) + '/examples/actors/chained'
+require File.dirname(__FILE__) + '/examples/actors/inner'
 
 module Logging
   def receive(data)
@@ -22,10 +24,12 @@ module Logging
 end
 
 Pelvis::Router.start do |router|
-  foo = router.agent("foo", [Randomz, Chained])
-  bar = router.agent("bar", [Randomz, Chained])
+  herault = router.agent("herault", [Herault])
+  foo = router.agent("foo", [])
+  bar = router.agent("bar", [Chained])
+  baz = router.agent("baz", [Inner])
 
-  foo.request("/chained", {:rcpts => ["foo"]}, :callback => Logging, :identities => ["bar"])
+  foo.request("/chained", {}, :callback => Logging) #, :identities => ["bar"])
 
   #console(bar)
 end

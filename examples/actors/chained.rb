@@ -2,9 +2,8 @@ class Chained < Pelvis::Actor
   bind "/chained"
   operation do
     invocation.receive "starting chained"
-    identities = invocation.job.args[:rcpts]
     10.times do |number|
-      invocation.request("/inner", {:number => number}, :callback => ProxyBack, :identities => identities)
+      invocation.request("/inner", {:number => number}, :callback => ProxyBack)
     end
   end
 
@@ -27,15 +26,6 @@ class Chained < Pelvis::Actor
   def check_complete
     if @numbers && @numbers.size == 10
       invocation.receive "completing chained"
-      invocation.complete(true)
-    end
-  end
-
-  bind "/inner"
-  operation do
-    invocation.receive "starting inner: #{invocation.job.args[:number]}"
-    EM.add_timer(rand(100) / 40.0) do
-      invocation.receive "completing inner: #{invocation.job.args[:number]}"
       invocation.complete(true)
     end
   end
