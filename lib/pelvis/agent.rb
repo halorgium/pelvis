@@ -37,12 +37,12 @@ module Pelvis
       @protocol.identity
     end
 
-    def actors
-      @actors || []
+    def herault
+      @protocol.herault
     end
 
-    def complete
-      @protocol.succeed(self)
+    def actors
+      @actors || []
     end
 
     def deliver_to(*args)
@@ -52,6 +52,7 @@ module Pelvis
     def advertise
       unless @protocol.advertise?
         LOGGER.debug "Not advertising cause I am herault"
+        succeed(true)
         return
       end
 
@@ -59,24 +60,26 @@ module Pelvis
       actors.each do |actor|
         args[:operations] += actor.provided_operations
       end
-      request("/security/advertise", args, {:identities => [@protocol.herault]}, self) do
+      request("/security/advertise", args, {:identities => [herault]}, self) do
         def complete(data)
           LOGGER.debug "Advertised successfully"
-          parent.complete
+          parent.succeed("Advertised successfully")
         end
 
         def error(data)
           LOGGER.debug "Failed to advertise"
+          parent.fail("Failed to advertise")
         end
       end
     end
 
-    def receive(type, message)
-      LOGGER.debug "received message (#{type.inspect}): #{message.inspect}"
-      case type
-      when :init
-        Incall.start(self, message)
-      end
+    def evoke(evocation)
+      @protocol.evoke(evocation)
+    end
+
+    def invoke(evocation)
+      LOGGER.debug "running evocation: #{evocation.inspect}"
+      Incall.start(self, evocation)
     end
 
     def operations_for(job)

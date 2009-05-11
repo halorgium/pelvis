@@ -1,5 +1,6 @@
 require 'eventmachine'
 require 'hmac-sha2'
+require 'extlib'
 
 $:.unshift File.dirname(__FILE__)
 
@@ -17,6 +18,8 @@ require 'pelvis/invocation'
 require 'pelvis/protocol'
 require 'pelvis/protocols'
 require 'pelvis/protocols/local'
+require 'pelvis/protocols/xmpp'
+require 'pelvis/protocols/xmpp/proxy_agent'
 
 require 'logger'
 

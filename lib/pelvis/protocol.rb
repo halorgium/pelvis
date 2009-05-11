@@ -17,29 +17,22 @@ module Pelvis
       p
     end
 
-    def initialize(router, options)
-      @router, @options = router, options
+    def initialize(router, options, *args_for_agent)
+      @router, @options, @args_for_agent = router, options, args_for_agent
     end
-    attr_reader :router, :options
+    attr_reader :router, :options, :agent
 
-    def spawn(*args)
-      agent = Agent.start(self, *args)
-      on_spawn(agent)
-      agent
+    def spawn
+      LOGGER.debug "Connected to protocol: #{inspect}"
+      @agent = Agent.start(self, *@args_for_agent)
+      on_spawn(@agent)
+      @agent.callback do |r|
+        succeed(@agent)
+      end
     end
 
-    def deliver_to(identity, type, message)
-      type = type.to_sym
-      unless [:init].include?(type)
-        LOGGER.debug "Unknown type: #{type.inspect}"
-        return
-      end
-
-      if agent = agent_for(identity)
-        agent.receive(type, message)
-      else
-        raise "No such agent found: #{identity.inspect}"
-      end
+    def evoke(job)
+      raise "Implement #evoke on #{self.class}"
     end
 
     def connect
@@ -55,10 +48,6 @@ module Pelvis
     end
 
     def on_spawn(agent)
-    end
-
-    def agent_for(identity)
-      raise "Implement #agent_for on #{self.class}"
     end
 
     def inspect

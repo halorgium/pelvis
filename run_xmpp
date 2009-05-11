@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+
+require File.dirname(__FILE__) + '/lib/pelvis'
+
+require File.dirname(__FILE__) + '/examples/actors/herault'
+require File.dirname(__FILE__) + '/examples/actors/randomz'
+require File.dirname(__FILE__) + '/examples/actors/chained'
+require File.dirname(__FILE__) + '/examples/actors/inner'
+
+module Logging
+  def receive(data)
+    log "Received data: #{data.inspect}"
+  end
+
+  def complete(event)
+    log "Completed with #{event.inspect}"
+  end
+
+  def log(message)
+    puts "%0.7f: %s" % [Time.now.to_f, message]
+  end
+end
+
+EM.run do
+  Pelvis::Router.start do |router|
+    router.connect(:xmpp, {:jid => "herault@localhost/agent", :password => "testing"}, [Herault]) do |agent|
+      puts "herault is ready"
+    end
+  end
+
+  Pelvis::Router.start do |router|
+    router.connect(:xmpp, {:jid => "dummy@localhost/agent", :password => "testing"}, [Randomz]) do |agent|
+      puts "foo is ready"
+    end
+  end
+
+  Pelvis::Router.start do |router|
+    router.connect(:xmpp, {:jid => "admin@localhost/agent", :password => "testing"}) do |agent|
+      puts "bar is ready"
+      agent.request("/do/random", {}, :callback => Logging)
+    end
+  end
+end

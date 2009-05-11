@@ -13,7 +13,7 @@ module Pelvis
 
     def start(&block)
       LOGGER.debug "starting evocation: #{@identity.inspect}"
-      incall = agent.deliver_to(@identity, :init, self)
+      incall = agent.evoke(self)
       LOGGER.debug "got an incall: #{incall.inspect}"
       incall.callback do |data|
         LOGGER.debug "callback from incall: #{incall.inspect}: #{data.inspect}"

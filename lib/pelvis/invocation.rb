@@ -20,6 +20,7 @@ module Pelvis
 
     def receive(data)
       LOGGER.debug "received data from operation #{@operation}: #{data.inspect}"
+      raise "Data is not a hash: #{data.inspect}" unless data.is_a?(Hash)
       @incall.receive(self, data)
     end
 
@@ -40,6 +41,13 @@ module Pelvis
       LOGGER.debug "completed operation #{@operation}: #{data.inspect}"
       @complete = true
       succeed(data)
+    end
+
+    def error(data)
+      return if complete?
+      LOGGER.debug "failed operation #{@operation}: #{data.inspect}"
+      @complete = true
+      fail(data)
     end
 
     def complete?

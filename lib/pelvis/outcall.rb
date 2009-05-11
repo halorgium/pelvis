@@ -71,11 +71,11 @@ module Pelvis
     def discover_with_herault
       @agent.request("/security/discover",
                      {:operation => job.operation, :args => job.args},
-                     {:identities => ["herault"]},
+                     {:identities => [@agent.herault]},
                      self) do
         def receive(data)
           @identities ||= []
-          @identities += data
+          @identities += data[:identities]
         end
 
         def complete(data)

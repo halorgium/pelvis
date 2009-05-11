@@ -5,7 +5,7 @@ class Randomz < Pelvis::Actor
   end
 
   def send_wait(number)
-    @invocation.receive("data #{@invocation.job.token}")
+    @invocation.receive(:message => "data #{@invocation.job.token}")
     EM.add_timer(random_time) do
       if number == 0
         @invocation.complete("completed: #{@invocation.job.token}")

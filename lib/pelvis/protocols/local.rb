@@ -7,11 +7,15 @@ module Pelvis
 
       def connect
         LOGGER.debug "connecting using #{self.class}: identity=#{identity.inspect}"
-        succeed("connected as #{identity.inspect}")
+        spawn
       end
 
       def on_spawn(agent)
         SET << agent
+      end
+
+      def evoke(evocation)
+        agent_for(evocation.identity).invoke(evocation)
       end
 
       def agent_for(identity)
