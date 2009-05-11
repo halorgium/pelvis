@@ -2,7 +2,6 @@ if blather_dir = ENV["BLATHER_DIR"]
   $:.unshift blather_dir + "/lib"
 end
 require 'blather'
-require 'blather/client'
 
 module Pelvis
   module Protocols
