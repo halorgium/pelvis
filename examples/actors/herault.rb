@@ -5,8 +5,7 @@ class Herault < Pelvis::Actor
     @operation_map ||= {}
   end
 
-  bind "/security/advertise"
-  operation do
+  operation "/security/advertise" do
     unless identity = invocation.job.args[:identity]
       next invocation.error("No identity provided")
     end
@@ -17,15 +16,13 @@ class Herault < Pelvis::Actor
     invocation.complete("done")
   end
 
-  bind "/security/discover"
-  operation do
+  operation "/security/discover" do
     identities = identities_for(invocation.job.args[:operation])
     invocation.receive(:identities => identities) if identities.any?
     invocation.complete("done")
   end
 
-  bind "/security/authorize"
-  operation do
+  operation "/security/authorize" do
     invocation.receive(true)
     invocation.complete("done")
   end

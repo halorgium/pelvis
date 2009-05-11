@@ -1,6 +1,5 @@
 class Chained < Pelvis::Actor
-  bind "/chained"
-  operation do
+  operation "/chained" do
     invocation.receive "starting chained"
     10.times do |number|
       invocation.request("/inner", {:number => number}, :callback => ProxyBack)

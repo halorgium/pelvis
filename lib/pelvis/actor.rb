@@ -1,17 +1,11 @@
 module Pelvis
   class Actor
     class << self
-      def operation(&block)
-        @operations.each do |operation|
+      def operation(*names, &block)
+        names.each do |operation|
           provided_operations << operation
           operation_methods[operation] << block
         end
-        @operations = nil
-      end
-
-      def bind(operation)
-        @operations ||= []
-        @operations << operation
       end
 
       def lookup_op(operation)
