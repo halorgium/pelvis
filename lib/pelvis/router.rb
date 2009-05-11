@@ -2,49 +2,28 @@ module Pelvis
   class Router
     include EM::Deferrable
 
-    def self.start(&block)
-      new.start(&block)
-    end
-
-    def start(&block)
+    def self.start
       EM.run do
-        yield self if block_given?
+        router = new
+        yield router if block_given?
       end
     end
 
-    def agent(*args)
-      agent = Agent.start(self, *args)
-      local_agents << agent
-      agent
-    end
-
-    # TODO: This need to support other protocols like AMQP, XMPP
-    def deliver_to(identity, type, message)
-      type = type.to_sym
-      unless [:init].include?(type)
-        LOGGER.debug "Unknown type: #{type.inspect}"
-        return
+    def connect(protocol_name, protocol_options, actors = nil, &block)
+      protocol = Protocols.connect(protocol_name, self, protocol_options)
+      protocol.callback do |r|
+        LOGGER.debug "Connected to protocol: #{protocol.inspect}"
+        protocol.spawn(actors)
       end
-
-      if agent = local_agent_for(identity)
-        agent.receive(type, message)
-      else
-        raise "Remote sending has not been implemented"
+      protocol.callback(&block) if block_given?
+      protocol.errback do |r|
+        LOGGER.error "Could not connect to protocol: #{protocol.inspect}, #{r.inspect}"
       end
-    end
-
-    def local_agent_for(identity)
-      @local_agents.find do |agent|
-        agent.identity == identity
-      end
-    end
-
-    def local_agents
-      @local_agents ||= []
+      protocol
     end
 
     def inspect
-      "#<#{self.class} local_agents=#{local_agents.size}>"
+      "#<#{self.class} agents=#{agents.map {|a| a.identity}.inspect}>"
     end
   end
 end

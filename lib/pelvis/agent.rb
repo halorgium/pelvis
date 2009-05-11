@@ -6,15 +6,19 @@ module Pelvis
       new(*args).start
     end
 
-    def initialize(router, identity, actors)
-      @router, @identity, @actors = router, identity, actors
+    def initialize(protocol, actors)
+      @protocol, @actors = protocol, actors
     end
-    attr_reader :router, :identity, :actors
+    attr_reader :protocol
 
     def start
-      LOGGER.debug "Starting an agent: #{@identity.inspect}"
+      LOGGER.debug "Starting an agent: #{@protocol.inspect}, #{@actors.inspect}"
       advertise
       self
+    end
+
+    def job
+      @job ||= Job.create(gen_token, "/init", {}, {}, nil)
     end
 
     def request(operation, args, options, parent = nil, &block)
@@ -29,19 +33,36 @@ module Pelvis
       o
     end
 
+    def identity
+      @protocol.identity
+    end
+
+    def actors
+      @actors || []
+    end
+
+    def complete
+      @protocol.succeed(self)
+    end
+
+    def deliver_to(*args)
+      @protocol.deliver_to(*args)
+    end
+
     def advertise
-      if @identity == "herault"
+      unless @protocol.advertise?
         LOGGER.debug "Not advertising cause I am herault"
         return
       end
 
-      args = {:identity => @identity, :operations => []}
-      @actors.each do |actor|
+      args = {:identity => identity, :operations => []}
+      actors.each do |actor|
         args[:operations] += actor.provided_operations
       end
-      request("/security/advertise", args, {:identities => ["herault"]}) do
+      request("/security/advertise", args, {:identities => [@protocol.herault]}, self) do
         def complete(data)
           LOGGER.debug "Advertised successfully"
+          parent.complete
         end
 
         def error(data)
@@ -71,7 +92,7 @@ module Pelvis
     end
 
     def inspect
-      "#<#{self.class} router=#{@router.inspect} identity=#{@identity.inspect}>"
+      "#<#{self.class} protocol=#{@protocol.inspect} actors=#{@actors.inspect}>"
     end
   end
 end

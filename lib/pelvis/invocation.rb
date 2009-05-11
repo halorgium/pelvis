@@ -23,10 +23,6 @@ module Pelvis
       @incall.receive(self, data)
     end
 
-    def router
-      @incall.router
-    end
-
     def agent
       @incall.agent
     end

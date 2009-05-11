@@ -49,19 +49,20 @@ module Pelvis
       @complete
     end
 
-    def router
-      @agent.router
-    end
-
     def evocations
       @evocations ||= []
     end
 
+    def evoke_to(identities)
+      identities.each do |i|
+        evoke(i)
+      end
+      check_complete
+    end
+
     def discover
       if identities = @job.options[:identities]
-        identities.each do |i|
-          evoke(i)
-        end
+        evoke_to(identities)
       else
         discover_with_herault
       end
@@ -79,9 +80,7 @@ module Pelvis
 
         def complete(data)
           return unless @identities
-          @identities.each do |i|
-            parent.evoke(i)
-          end
+          parent.evoke_to(@identities)
         end
       end
     end

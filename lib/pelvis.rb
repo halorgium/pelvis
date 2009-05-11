@@ -14,6 +14,10 @@ require 'pelvis/evocation'
 require 'pelvis/incall'
 require 'pelvis/invocation'
 
+require 'pelvis/protocol'
+require 'pelvis/protocols'
+require 'pelvis/protocols/local'
+
 require 'logger'
 
 module Pelvis

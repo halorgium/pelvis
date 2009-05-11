@@ -23,13 +23,23 @@ module Logging
   end
 end
 
-Pelvis::Router.start do |router|
-  herault = router.agent("herault", [Herault])
-  foo = router.agent("foo", [])
-  bar = router.agent("bar", [Chained])
-  baz = router.agent("baz", [Inner])
+EM.run do
+  Pelvis::Router.start do |router|
+    router.connect(:local, {:identity => "herault"}, [Herault]) do |agent|
+      puts "herault is ready"
+    end
+  end
 
-  foo.request("/chained", {}, :callback => Logging) #, :identities => ["bar"])
+  Pelvis::Router.start do |router|
+    router.connect(:local, {:identity => "foo"}, [Randomz]) do |agent|
+      puts "foo is ready"
+    end
+  end
 
-  #console(bar)
+  Pelvis::Router.start do |router|
+    router.connect(:local, {:identity => "bar"}) do |agent|
+      puts "bar is ready"
+      agent.request("/do/random", {}, :callback => Logging)
+    end
+  end
 end

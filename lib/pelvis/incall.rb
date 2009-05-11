@@ -52,10 +52,6 @@ module Pelvis
       @complete
     end
 
-    def router
-      @agent.router
-    end
-
     def job
       @evocation.job
     end
