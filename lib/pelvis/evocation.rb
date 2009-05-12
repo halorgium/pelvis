@@ -7,6 +7,7 @@ module Pelvis
     end
 
     def initialize(outcall, identity)
+      @started_at, @completed_at = nil
       @outcall, @identity = outcall, identity
     end
     attr_reader :outcall, :identity
@@ -23,6 +24,7 @@ module Pelvis
         LOGGER.debug "errback from incall: #{incall.inspect}: #{data.inspect}"
         fail(data)
       end
+      @started_at = Time.now
       self
     end
 
@@ -40,12 +42,16 @@ module Pelvis
     end
 
     def complete(data)
-      @complete = true
+      @completed_at = Time.now
       succeed(data)
     end
 
     def complete?
-      @complete
+      !!@completed_at
+    end
+
+    def duration
+      complete? ? @completed_at - @started_at : Time.now - @started_at
     end
 
     def inspect
