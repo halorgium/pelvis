@@ -24,22 +24,16 @@ module Logging
 end
 
 EM.run do
-  Pelvis::Router.start do |router|
-    router.connect(:xmpp, {:jid => "herault@localhost/agent", :password => "testing"}, [Herault]) do |agent|
-      puts "herault is ready"
-    end
+  Pelvis.connect(:xmpp, {:jid => "herault@localhost/agent", :password => "testing"}, [Herault]) do |agent|
+    puts "herault is ready"
   end
 
-  Pelvis::Router.start do |router|
-    router.connect(:xmpp, {:jid => "dummy@localhost/agent", :password => "testing"}, [Randomz]) do |agent|
-      puts "foo is ready"
-    end
+  Pelvis.connect(:xmpp, {:jid => "dummy@localhost/agent", :password => "testing"}, [Randomz]) do |agent|
+    puts "foo is ready"
   end
 
-  Pelvis::Router.start do |router|
-    router.connect(:xmpp, {:jid => "admin@localhost/agent", :password => "testing"}) do |agent|
-      puts "bar is ready"
-      agent.request("/do/random", {}, :callback => Logging)
-    end
+  Pelvis.connect(:xmpp, {:jid => "admin@localhost/agent", :password => "testing"}) do |agent|
+    puts "bar is ready"
+    agent.request("/do/random", {}, :callback => Logging)
   end
 end
