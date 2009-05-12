@@ -9,7 +9,7 @@ module Pelvis
         end
 
         def start
-          @agent.send_init(job.token, job.operation, job.args)
+          @agent.send_init(job.token, job.scope, job.operation, job.args)
           self
         end
 

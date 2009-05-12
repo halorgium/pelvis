@@ -18,11 +18,11 @@ module Pelvis
     end
 
     def job
-      @job ||= Job.create(gen_token, "/init", {}, {}, nil)
+      @job ||= Job.create(gen_token, :init, "/init", {}, {}, nil)
     end
 
-    def request(operation, args, options, parent = nil, &block)
-      job = Job.create(gen_token, operation, args, options, parent, &block)
+    def request(scope, operation, args, options, parent = nil, &block)
+      job = Job.create(gen_token, scope, operation, args, options, parent || self, &block)
       o = Outcall.start(self, job)
       o.callback do |r|
         LOGGER.debug "outcall callback: #{r.inspect}"
@@ -60,7 +60,7 @@ module Pelvis
       actors.each do |actor|
         args[:operations] += actor.provided_operations
       end
-      request("/security/advertise", args, {:identities => [herault]}, self) do
+      request(:direct, "/security/advertise", args, {:identities => [herault]}, self) do
         def complete(data)
           LOGGER.debug "Advertised successfully"
           parent.succeed("Advertised successfully")

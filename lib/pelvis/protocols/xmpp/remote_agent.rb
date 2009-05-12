@@ -13,7 +13,7 @@ module Pelvis
 
         def invoke(token, node)
           args = JSON.parse(Base64.decode64(node.content)).to_mash
-          job = Job.new(token, node["operation"], args, {}, nil)
+          job = Job.new(token, node["scope"], node["operation"], args, {}, nil)
           LOGGER.debug "Job starting: #{job.inspect}"
           incall = @protocol.agent.invoke(evocation_for(job))
           incall.callback do |r|
@@ -55,8 +55,8 @@ module Pelvis
           @incalls ||= {}
         end
 
-        def send_init(token, operation, args)
-          send_stanza("init", args, :token => token, :operation => operation, :scope => "all")
+        def send_init(token, scope, operation, args)
+          send_stanza("init", args, :scope => scope, :token => token, :operation => operation)
         end
 
         def send_data(token, data)

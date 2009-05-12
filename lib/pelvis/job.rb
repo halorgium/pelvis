@@ -1,6 +1,6 @@
 module Pelvis
   class Job
-    def self.create(token, operation, args, options, parent, &block)
+    def self.create(token, scope, operation, args, options, parent, &block)
       mod = options[:callback]
       raise "Do not specify a callback module and a block" if mod && block_given?
 
@@ -14,14 +14,18 @@ module Pelvis
         end
       end
 
-      klass.new(token, operation, args, options, parent)
+      klass.new(token, scope, operation, args, options, parent)
     end
 
-    def initialize(token, operation, args, options, parent)
-      @token, @operation, @args, @options, @parent = token, operation, args, options, parent
+    def initialize(token, scope, operation, args, options, parent)
+      scope = scope.to_sym
+      unless [:init, :direct, :all].include?(scope)
+        raise ArgumentError, "Scope #{scope.inspect} is not valid"
+      end
+      @token, @scope, @operation, @args, @options, @parent = token, scope, operation, args, options, parent
       @token << ":#{@parent.job.token}" if @parent
     end
-    attr_reader :token, :operation, :args, :options, :parent
+    attr_reader :token, :scope, :operation, :args, :options, :parent
 
     def receive(data)
       LOGGER.debug "data: Doing nothing with #{data.inspect}"

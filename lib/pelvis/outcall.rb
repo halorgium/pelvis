@@ -69,7 +69,7 @@ module Pelvis
     end
 
     def discover_with_herault
-      @agent.request("/security/discover",
+      @agent.request(:direct, "/security/discover",
                      {:operation => job.operation, :args => job.args},
                      {:identities => [@agent.herault]},
                      self) do

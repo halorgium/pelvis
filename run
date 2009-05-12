@@ -23,17 +23,27 @@ module Logging
   end
 end
 
-EM.run do
+def connect_herault
   Pelvis.connect(:local, {:identity => "herault"}, [Herault]) do |agent|
     puts "herault is ready"
+    connect_foo
   end
+end
 
+def connect_foo
   Pelvis.connect(:local, {:identity => "foo"}, [Randomz]) do |agent|
     puts "foo is ready"
+    connect_bar
   end
+end
 
+def connect_bar
   Pelvis.connect(:local, {:identity => "bar"}) do |agent|
     puts "bar is ready"
-    agent.request("/do/random", {}, :callback => Logging)
+    agent.request(:all, "/do/random", {}, :callback => Logging)
   end
+end
+
+EM.run do
+  connect_herault
 end

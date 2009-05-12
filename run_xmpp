@@ -35,6 +35,6 @@ EM.run do
 
   Pelvis.connect(:xmpp, {:jid => "admin@localhost/agent", :password => "testing"}) do |agent|
     puts "bar is ready"
-    agent.request("/do/random", {}, :callback => Logging)
+    agent.request(:all, "/do/random", {}, :callback => Logging)
   end
 end
