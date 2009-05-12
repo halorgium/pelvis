@@ -24,17 +24,25 @@ module Logging
   end
 end
 
+#Pelvis::LOGGER.level = Logger::WARN
+#Blather::LOG.level = Logger::DEBUG
+
 EM.run do
   Pelvis.connect(:xmpp, {:jid => "herault@localhost/agent", :password => "testing"}, [Herault]) do |agent|
     puts "herault is ready"
   end
 
-  Pelvis.connect(:xmpp, {:jid => "dummy@localhost/agent", :password => "testing"}, [Randomz]) do |agent|
-    puts "foo is ready"
+  Pelvis.connect(:xmpp, {:jid => "dummy@localhost/agent", :password => "testing"}, [Randomz, Chained]) do |agent|
+    puts "chained is ready"
+  end
+
+  Pelvis.connect(:xmpp, {:jid => "dummy2@localhost/agent", :password => "testing"}, [Inner]) do |agent|
+    puts "inner is ready"
   end
 
   Pelvis.connect(:xmpp, {:jid => "admin@localhost/agent", :password => "testing"}) do |agent|
     puts "bar is ready"
-    agent.request(:all, "/do/random", {}, :callback => Logging)
+    o = agent.request(:all, "/chained", {}, :callback => Logging)
+    o = agent.request(:all, "/do/random", {}, :callback => Logging)
   end
 end
