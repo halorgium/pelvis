@@ -32,7 +32,7 @@ module Pelvis
 
     def receive(evocation, data)
       LOGGER.debug "data from #{evocation.inspect}: #{data.inspect}"
-      @job.receive(data)
+      @job.receive(Message.new(evocation, data))
     end
 
     def check_complete

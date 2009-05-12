@@ -8,6 +8,7 @@ require 'pelvis/agent'
 require 'pelvis/job'
 require 'pelvis/actor'
 
+require 'pelvis/message'
 require 'pelvis/outcall'
 require 'pelvis/evocation'
 
