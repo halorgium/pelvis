@@ -3,6 +3,7 @@
 require 'rubygems'
 
 require File.dirname(__FILE__) + '/lib/pelvis'
+require 'pelvis/protocols/xmpp'
 
 require File.dirname(__FILE__) + '/examples/actors/herault'
 require File.dirname(__FILE__) + '/examples/actors/randomz'

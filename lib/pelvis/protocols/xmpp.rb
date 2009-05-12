@@ -1,7 +1,6 @@
-if blather_dir = ENV["BLATHER_DIR"]
-  $:.unshift blather_dir + "/lib"
-end
 require 'blather'
+require 'json'
+require 'base64'
 
 module Pelvis
   module Protocols
@@ -40,7 +39,7 @@ module Pelvis
       end
 
       def agent_for(identity)
-        agents[identity] ||= ProxyAgent.new(self, identity)
+        agents[identity] ||= RemoteAgent.new(self, identity)
       end
 
       def agents
@@ -68,3 +67,7 @@ module Pelvis
     end
   end
 end
+
+require 'pelvis/protocols/xmpp/remote_agent'
+require 'pelvis/protocols/xmpp/incall'
+require 'pelvis/protocols/xmpp/evocation'

@@ -17,8 +17,6 @@ require 'pelvis/invocation'
 require 'pelvis/protocol'
 require 'pelvis/protocols'
 require 'pelvis/protocols/local'
-require 'pelvis/protocols/xmpp'
-require 'pelvis/protocols/xmpp/proxy_agent'
 
 require 'logger'
 
