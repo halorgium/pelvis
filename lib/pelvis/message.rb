@@ -14,6 +14,14 @@ module Pelvis
       data[key]
     end
 
+    def to_json
+      to_hash.to_json
+    end
+
+    def to_hash
+      { :data => data, :meta => { :sender => sender, :received_at => received_at } }
+    end
+
     def inspect
       "#<#{self.class} sender=#{sender.inspect} data=#{data.inspect}>"
     end
