@@ -24,6 +24,7 @@ module Pelvis
     end
 
     def request(scope, operation, args, options)
+      args = JSON.parse(args.to_json) # serialize/unserialize attrs to wipe out symbols etc, makes locally dispatched same as remote
       job = Job.create(gen_token, scope, operation, args, options)
       o = Outcall.start(self, job)
       o.callback do |r|
