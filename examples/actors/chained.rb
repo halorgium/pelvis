@@ -6,7 +6,7 @@ class Chained < Pelvis::Actor
     # it appears to be an issue with blather's handling of the message from jabber
     timer = EM::PeriodicTimer.new(1) {
       invocation.receive :message => "requesting inner #{number}"
-      invocation.request(:all, "/inner", {:number => number}, :identities => args[:ident], :delegate => ProxyBack.new(self,number))
+      invocation.request(:all, "/inner", {:number => number}, :delegate => ProxyBack.new(self,number))
       number -= 1
       timer.cancel if number <= 0
     }

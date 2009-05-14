@@ -10,7 +10,7 @@ module Pelvis
         raise ArgumentError, "Scope #{scope.inspect} is not valid"
       end
       @token, @scope, @operation, @args, @options = token, scope, operation, args, options
-      delegate
+      #delegate
     end
     attr_reader :token, :scope, :operation, :args, :options, :parent
 

@@ -65,7 +65,6 @@ module Pelvis
       if identities = @job.options[:identities]
         evoke_to(identities)
       else
-        raise "Disabled herault, provide identities to the job"
         discover_with_herault
       end
     end
