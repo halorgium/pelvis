@@ -28,7 +28,9 @@ module Pelvis
     end
 
     def agent_start(agents, &block)
-      agent_connect(configs_for(agents), &block)
+      EM.run do
+        agent_connect(configs_for(agents), &block)
+      end
     end
 
     def agent_connect(agents, &block)
