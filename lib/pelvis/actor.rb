@@ -1,6 +1,10 @@
 module Pelvis
   class Actor
+    include Logging
+
     class << self
+      include Logging
+
       def operation(*names, &block)
         names.each do |operation|
           provided_operations << operation
@@ -38,7 +42,7 @@ module Pelvis
         operations = []
         provided_operations.each do |operation|
           if operation == job.operation
-            LOGGER.debug "returning an operation: #{operation.inspect}"
+            logger.debug "returning an operation: #{operation.inspect}"
             operation_methods[operation].each do |block|
               operations << [self, block]
             end

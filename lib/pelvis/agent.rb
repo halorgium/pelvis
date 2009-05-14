@@ -1,5 +1,6 @@
 module Pelvis
   class Agent
+    include Logging
     include EM::Deferrable
 
     def self.start(*args)
@@ -12,23 +13,24 @@ module Pelvis
     attr_reader :protocol
 
     def start
-      LOGGER.debug "Starting an agent: #{@protocol.inspect}, #{@actors.inspect}"
-      advertise
+      logger.debug "Starting an agent: #{@protocol.inspect}, #{@actors.inspect}"
+      succeed("Advertised successfully")
+      #advertise
       self
     end
 
     def job
-      @job ||= Job.create(gen_token, :init, "/init", {}, {}, nil)
+      @job ||= Job.create(gen_token, :init, "/init", {}, :delegate => DefaultDelegate.new)
     end
 
-    def request(scope, operation, args, options, parent = nil, &block)
-      job = Job.create(gen_token, scope, operation, args, options, parent || self, &block)
+    def request(scope, operation, args, options)
+      job = Job.create(gen_token, scope, operation, args, options)
       o = Outcall.start(self, job)
       o.callback do |r|
-        LOGGER.debug "outcall callback: #{r.inspect}"
+        logger.debug "outcall callback: #{r.inspect}"
       end
       o.errback do |r|
-        LOGGER.debug "outcall errback: #{r.inspect}"
+        logger.debug "outcall errback: #{r.inspect}"
       end
       o
     end
@@ -49,9 +51,28 @@ module Pelvis
       @protocol.deliver_to(*args)
     end
 
+    class Advertiser
+      include Delegate
+      include Logging
+
+      def initialize(agent)
+        @agent = agent
+      end
+
+      def complete(data)
+        logger.debug "Advertised successfully"
+        @agent.succeed("Advertised successfully")
+      end
+
+      def error(data)
+        logger.debug "Failed to advertise"
+        @agent.fail("Failed to advertise")
+      end
+    end
+
     def advertise
       unless @protocol.advertise?
-        LOGGER.debug "Not advertising cause I am herault"
+        logger.debug "Not advertising cause I am herault"
         succeed(true)
         return
       end
@@ -60,17 +81,7 @@ module Pelvis
       actors.each do |actor|
         args[:operations] += actor.provided_operations
       end
-      request(:direct, "/security/advertise", args, {:identities => [herault]}, self) do
-        def complete(data)
-          LOGGER.debug "Advertised successfully"
-          parent.succeed("Advertised successfully")
-        end
-
-        def error(data)
-          LOGGER.debug "Failed to advertise"
-          parent.fail("Failed to advertise")
-        end
-      end
+      request(:direct, "/security/advertise", args, :identities => [herault], :delegate => Advertiser.new(self))
     end
 
     def evoke(evocation)
@@ -78,7 +89,7 @@ module Pelvis
     end
 
     def invoke(evocation)
-      LOGGER.debug "running evocation: #{evocation.inspect}"
+      logger.debug "running evocation: #{evocation.inspect}"
       Incall.start(self, evocation)
     end
 

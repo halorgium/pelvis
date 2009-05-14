@@ -1,5 +1,6 @@
 module Pelvis
   class Invocation
+    include Logging
     include EM::Deferrable
 
     def self.start(*args)
@@ -13,13 +14,13 @@ module Pelvis
     attr_reader :incall, :actor_klass, :operation, :actor
 
     def start
-      LOGGER.debug "starting invocation: #{@actor_klass.inspect}, #{@operation.inspect}"
+      logger.debug "starting invocation: #{@actor_klass.inspect}, #{@operation.inspect}"
       @actor.run(@operation)
       self
     end
 
     def receive(data)
-      LOGGER.debug "received data from operation #{@operation}: #{data.inspect}"
+      logger.debug "received data from operation #{@operation}: #{data.inspect}"
       raise "Data is not a hash: #{data.inspect}" unless data.is_a?(Hash)
       @incall.receive(self, data)
     end
@@ -38,14 +39,14 @@ module Pelvis
 
     def complete(data)
       return if complete?
-      LOGGER.debug "completed operation #{@operation}: #{data.inspect}"
+      logger.debug "completed operation #{@operation}: #{data.inspect}"
       @complete = true
       succeed(data)
     end
 
     def error(data)
       return if complete?
-      LOGGER.debug "failed operation #{@operation}: #{data.inspect}"
+      logger.debug "failed operation #{@operation}: #{data.inspect}"
       @complete = true
       fail(data)
     end

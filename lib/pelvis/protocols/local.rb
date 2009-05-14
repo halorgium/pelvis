@@ -1,12 +1,14 @@
 module Pelvis
   module Protocols
     class Local < Protocol
+      include Logging
+
       register :local
 
       SET = []
 
       def connect
-        LOGGER.debug "connecting using #{self.class}: identity=#{identity.inspect}"
+        logger.debug "connecting using #{self.class}: identity=#{identity.inspect}"
         spawn
       end
 
@@ -15,7 +17,11 @@ module Pelvis
       end
 
       def evoke(evocation)
-        agent_for(evocation.identity).invoke(evocation)
+        if agent = agent_for(evocation.identity)
+          agent.invoke(evocation)
+        else
+          raise "Could not find an agent found #{evocation.identity.inspect}"
+        end
       end
 
       def agent_for(identity)

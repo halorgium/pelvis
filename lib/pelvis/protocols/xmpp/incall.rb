@@ -2,6 +2,7 @@ module Pelvis
   module Protocols
     class XMPP
       class Incall
+        include Logging
         include EM::Deferrable
 
         def initialize(agent, evocation)
@@ -14,7 +15,7 @@ module Pelvis
         end
 
         def receive(data)
-          LOGGER.debug "received data: #{data.inspect}"
+          logger.debug "received data: #{data.inspect}"
           @evocation.receive(data)
         end
 

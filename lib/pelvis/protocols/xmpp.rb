@@ -8,7 +8,7 @@ module Pelvis
       register :xmpp
 
       def connect
-        LOGGER.debug "connecting using #{self.class}: #{options.inspect}"
+        logger.debug "connecting using #{self.class}: #{options.inspect}"
         @stream = Blather::Stream::Client.start(self, jid, options[:password])
       end
       attr_reader :stream
@@ -17,8 +17,13 @@ module Pelvis
         spawn
       end
 
+      def stopped
+        logger.warn "Got disconnected"
+        fail("disconnected")
+      end
+
       def call(stanza)
-        LOGGER.debug "got a stanza for #{identity}: #{stanza.inspect}"
+        logger.debug "got a stanza for #{identity}: #{stanza.inspect}"
         remote_agent = agent_for(stanza["from"])
         node = stanza.find("job").first
         token = node["token"]

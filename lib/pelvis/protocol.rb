@@ -1,5 +1,6 @@
 module Pelvis
   class Protocol
+    include Logging
     include EM::Deferrable
 
     def self.register(name)
@@ -23,7 +24,7 @@ module Pelvis
     attr_reader :router, :options, :agent
 
     def spawn
-      LOGGER.debug "Connected to protocol: #{inspect}"
+      logger.debug "Connected to protocol: #{inspect}"
       @agent = Agent.start(self, *@args_for_agent)
       on_spawn(@agent)
       @agent.callback do |r|

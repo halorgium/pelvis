@@ -9,20 +9,7 @@ require File.dirname(__FILE__) + '/examples/actors/herault'
 require File.dirname(__FILE__) + '/examples/actors/randomz'
 require File.dirname(__FILE__) + '/examples/actors/chained'
 require File.dirname(__FILE__) + '/examples/actors/inner'
-
-module Logging
-  def receive(data)
-    log "Received data: #{data.inspect}"
-  end
-
-  def complete(event)
-    log "Completed with #{event.inspect}"
-  end
-
-  def log(message)
-    puts "%0.7f: %s" % [Time.now.to_f, message]
-  end
-end
+require File.dirname(__FILE__) + '/examples/delegates/debugger'
 
 EM.run do
   Pelvis.connect(:xmpp, {:jid => "herault@localhost/agent", :password => "testing"}, [Herault]) do |agent|
@@ -35,6 +22,6 @@ EM.run do
 
   Pelvis.connect(:xmpp, {:jid => "admin@localhost/agent", :password => "testing"}) do |agent|
     puts "bar is ready"
-    agent.request(:all, "/do/random", {}, :callback => Logging)
+    agent.request(:all, "/do/random", {}, :identities => ["dummy@localhost/agent"], :delegate => Debugger.new)
   end
 end

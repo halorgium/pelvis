@@ -1,5 +1,6 @@
 module Pelvis
   class Incall
+    include Logging
     include EM::Deferrable
 
     def self.start(*args)
@@ -12,7 +13,7 @@ module Pelvis
     attr_reader :agent, :evocation
 
     def start
-      LOGGER.debug "starting incall on #{@agent.identity}: #{@evocation.inspect}"
+      logger.debug "starting incall on #{@agent.identity}: #{@evocation.inspect}"
       # TODO: This needs to authorize the job
       operations.each do |o|
         invoke(*o)
@@ -25,24 +26,24 @@ module Pelvis
       i = Invocation.start(self, actor_klass, operation)
       invocations << i
       i.callback do |r|
-        LOGGER.debug "callback from #{operation}: #{r.inspect}"
+        logger.debug "callback from #{operation}: #{r.inspect}"
         check_complete
       end
       i.errback do |r|
-        LOGGER.debug "errback from #{operation}: #{r.inspect}"
+        logger.debug "errback from #{operation}: #{r.inspect}"
         check_complete
       end
     end
 
     def receive(invocation, data)
-      LOGGER.debug "data from #{invocation.inspect}: #{data.inspect}"
+      logger.debug "data from #{invocation.inspect}: #{data.inspect}"
       @evocation.receive(data)
     end
 
     def check_complete
       return if complete?
       if invocations.all? {|e| e.complete?}
-        LOGGER.debug "All invocations are finished"
+        logger.debug "All invocations are finished"
         @complete = true
         succeed "Done at #{Time.now}"
       end

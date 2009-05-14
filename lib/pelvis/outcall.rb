@@ -1,5 +1,6 @@
 module Pelvis
   class Outcall
+    include Logging
     include EM::Deferrable
 
     def self.start(*args)
@@ -12,7 +13,7 @@ module Pelvis
     attr_reader :agent, :job
 
     def start
-      LOGGER.debug "starting outcall on #{@agent.identity}: #{inspect}"
+      logger.debug "starting outcall on #{@agent.identity}: #{inspect}"
       discover
       self
     end
@@ -21,24 +22,24 @@ module Pelvis
       e = Evocation.start(self, identity)
       evocations << e
       e.callback do |r|
-        LOGGER.debug "callback from #{identity}: #{r.inspect}"
+        logger.debug "callback from #{identity}: #{r.inspect}"
         check_complete
       end
       e.errback do |r|
-        LOGGER.debug "errback from #{identity}: #{r.inspect}"
+        logger.debug "errback from #{identity}: #{r.inspect}"
         check_complete
       end
     end
 
     def receive(evocation, data)
-      LOGGER.debug "data from #{evocation.inspect}: #{data.inspect}"
+      logger.debug "data from #{evocation.inspect}: #{data.inspect}"
       @job.receive(data)
     end
 
     def check_complete
       return if complete?
       if evocations.all? {|e| e.complete?}
-        LOGGER.debug "All evocations are complete"
+        logger.debug "All evocations are complete"
         @complete = true
         @job.complete("win")
         succeed "Done at #{Time.now}"
@@ -64,25 +65,31 @@ module Pelvis
       if identities = @job.options[:identities]
         evoke_to(identities)
       else
+        raise "Disabled herault, provide identities to the job"
         discover_with_herault
       end
     end
 
-    def discover_with_herault
-      @agent.request(:direct, "/security/discover",
-                     {:operation => job.operation, :args => job.args},
-                     {:identities => [@agent.herault]},
-                     self) do
-        def receive(data)
-          @identities ||= []
-          @identities += data[:identities]
-        end
+    class HeraultDiscoverer
+      include Delegate
 
-        def complete(data)
-          return unless @identities
-          parent.evoke_to(@identities)
-        end
+      def initialize(outcall)
+        @outcall = outcall
+        @identities = []
       end
+
+      def receive(data)
+        @identities += data[:identities]
+      end
+
+      def complete(data)
+        @outcall.evoke_to(@identities)
+      end
+    end
+
+    def discover_with_herault
+      @agent.request(:direct, "/security/discover", {:operation => job.operation, :args => job.args},
+                     :identities => [@agent.herault], :delegate => HeraultDiscoverer.new(self))
     end
 
     def inspect

@@ -8,20 +8,7 @@ require File.dirname(__FILE__) + '/examples/actors/herault'
 require File.dirname(__FILE__) + '/examples/actors/randomz'
 require File.dirname(__FILE__) + '/examples/actors/chained'
 require File.dirname(__FILE__) + '/examples/actors/inner'
-
-module Logging
-  def receive(data)
-    log "Received data: #{data.inspect}"
-  end
-
-  def complete(event)
-    log "Completed with #{event.inspect}"
-  end
-
-  def log(message)
-    puts "%0.7f: %s" % [Time.now.to_f, message]
-  end
-end
+require File.dirname(__FILE__) + '/examples/delegates/debugger'
 
 def connect_herault
   Pelvis.connect(:local, {:identity => "herault"}, [Herault]) do |agent|
@@ -40,7 +27,7 @@ end
 def connect_bar
   Pelvis.connect(:local, {:identity => "bar"}) do |agent|
     puts "bar is ready"
-    agent.request(:all, "/do/random", {}, :callback => Logging)
+    agent.request(:all, "/do/random", {}, :identities => ["foo"], :delegate => Debugger.new)
   end
 end
 

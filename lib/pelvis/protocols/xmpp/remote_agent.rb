@@ -2,6 +2,8 @@ module Pelvis
   module Protocols
     class XMPP
       class RemoteAgent
+        include Logging
+
         def initialize(protocol, identity)
           @protocol, @identity = protocol, identity
         end
@@ -13,14 +15,14 @@ module Pelvis
 
         def invoke(token, node)
           args = JSON.parse(Base64.decode64(node.content)).to_mash
-          job = Job.new(token, node["scope"], node["operation"], args, {}, nil)
-          LOGGER.debug "Job starting: #{job.inspect}"
+          job = Job.new(token, node["scope"], node["operation"], args, {:delegate => DefaultDelegate.new})
+          logger.debug "Job starting: #{job.inspect}"
           incall = @protocol.agent.invoke(evocation_for(job))
           incall.callback do |r|
             send_final(job.token)
           end
           incall.errback do |r|
-            LOGGER.error "got an error for token: #{token}"
+            logger.error "got an error for token: #{token}"
           end
         end
 
