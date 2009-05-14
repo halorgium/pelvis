@@ -36,7 +36,7 @@ end
 
 class Simple < Pelvis::Actor
   operation "/number" do
-    invocation.receive("number" => 1)
+    invocation.receive(args)
     invocation.complete("awesome")
   end
 end

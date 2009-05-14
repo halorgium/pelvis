@@ -4,8 +4,9 @@ class Randomz < Pelvis::Actor
   end
 
   def send_wait(number)
-    @invocation.receive(:message => "data #{@invocation.job.token}")
-    EM.add_timer(random_time) do
+    wait = random_time
+    @invocation.receive(:message => "remaining #{number} waiting #{wait}")
+    EM.add_timer(wait) do
       if number == 0
         @invocation.complete("completed: #{@invocation.job.token}")
       else

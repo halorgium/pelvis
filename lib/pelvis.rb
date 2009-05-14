@@ -10,6 +10,7 @@ require 'pelvis/delegate'
 require 'pelvis/agent'
 require 'pelvis/actor'
 
+require 'pelvis/message'
 require 'pelvis/outcall'
 require 'pelvis/evocation'
 
