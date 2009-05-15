@@ -12,24 +12,45 @@ module Pelvis
       @registered_as
     end
 
-    def self.connect(*args)
+    def self.start(*args)
       p = new(*args)
-      p.connect
+      EM.next_tick do
+        p.start
+      end
       p
     end
 
-    def initialize(router, options, *args_for_agent)
-      @router, @options, @args_for_agent = router, options, args_for_agent
+    def self.callback(*names)
+      names.each do |name|
+        class_eval <<-EOC
+          def on_#{name}(*a, &b)
+            cb = EM::Callback(*a, &b)
+            @_on_#{name} ||= []
+            @on_#{name} << cb
+            cb[*@_name_data] if @_name == #{name.to_sym.inspect}
+          end
+          def #{name}(*a)
+            @_name = #{name.to_sym.inspect}
+            @_name_data = a
+            Array(@_on_#{name}).each { |cb| cb[*a] }
+            yield(*a) if block_given? # A tail run after other callbacks.
+          end
+        EOC
+      end
     end
-    attr_reader :router, :options, :agent
+
+    callback :configure
+
+    def initialize(options, &block)
+      @options = options
+      on_configure(&block)
+    end
+    attr_reader :options, :agent
 
     def spawn
       logger.debug "Connected to protocol: #{inspect}"
-      @agent = Agent.start(self, *@args_for_agent)
-      on_spawn(@agent)
-      @agent.callback do |r|
-        succeed(@agent)
-      end
+      agent = Agent.start(self)
+      configure(agent)
     end
 
     def evoke(job)

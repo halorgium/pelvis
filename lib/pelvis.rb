@@ -28,12 +28,7 @@ module Pelvis
     @logger ||= Logger.new($stderr)
   end
 
-  def self.connect(protocol_name, protocol_options, actors = nil, &block)
-    protocol = Protocols.connect(protocol_name, self, protocol_options, actors)
-    protocol.callback(&block) if block_given?
-    protocol.errback do |r|
-      logger.error "Could not connect to protocol: #{protocol.inspect}, #{r.inspect}"
-    end
-    protocol
+  def self.connect(protocol_name, protocol_options, &block)
+    Protocols.connect(protocol_name, protocol_options, &block)
   end
 end
