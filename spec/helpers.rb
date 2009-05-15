@@ -4,14 +4,16 @@ module Pelvis
     when "xmpp"
       PROTOCOL = Protocols::XMPP
       CONFIGS = {
-        :foo => {:jid => "admin@localhost/agent", :password => "testing"}.freeze,
-        :bar => {:jid => "dummy@localhost/agent", :password => "testing"}.freeze,
+        :foo => {:jid => "dummy@localhost/agent", :password => "testing"}.freeze,
+        :boo => {:jid => "dummy2@localhost/agent", :password => "testing"}.freeze,
+        :bar => {:jid => "admin@localhost/agent", :password => "testing"}.freeze,
         :herault => {:jid => "herault@localhost/agent", :password => "testing", :advertise => false}.freeze,
       }
     else
       PROTOCOL = Protocols::Local
       CONFIGS = {
         :foo => {:identity => "foo"}.freeze,
+        :boo => {:identity => "boo"}.freeze,
         :bar => {:identity => "bar"}.freeze,
         :herault => {:identity => "herault", :advertise => false}.freeze,
       }
@@ -34,11 +36,13 @@ module Pelvis
         actors.each do |actor|
           agent.actors << actor
         end
-
-        if agents.empty?
-          block.call(agent)
-        else
-          agent_connect(agents, &block)
+ 
+        agent.on_advertised do 
+          if agents.empty?
+            block.call(agent)
+          else
+            agent_connect(agents, &block)
+          end
         end
       end
       connection.on_failed do |error|

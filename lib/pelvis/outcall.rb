@@ -54,14 +54,22 @@ module Pelvis
     end
 
     def evoke_to(identities)
-      identities.each do |i|
-        evoke(i)
+      if job.scope == :all
+        identities.each do |i|
+          evoke(i)
+        end
+      elsif job.scope == :direct
+        to = identities[rand(identities.size)]
+        evoke(to)
+      elsif job.scope == :init
+        raise "TODO: I have nfi what this scope does"
+      else
+        raise "Invalid scope #{job.scope} detected"
       end
       check_complete
     end
 
     def discover
-      # TODO: Check scope here
       if identities = @job.options[:identities]
         evoke_to(identities)
       else
