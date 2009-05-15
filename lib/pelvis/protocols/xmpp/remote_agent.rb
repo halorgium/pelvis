@@ -28,12 +28,12 @@ module Pelvis
           end
           incall.on_received do |data|
             send_job_data(job.token, data) do |reply|
-              puts "Data was received"
+              logger.debug "Data was received"
             end
           end
           incall.on_completed do |event|
             send_job_end(job.token) do |reply|
-              puts "End was received"
+              logger.debug "End was received"
             end
           end
           incall.on_failed do |error|
@@ -50,10 +50,12 @@ module Pelvis
         def handle_job_data(stanza, node, token)
           data = JSON.parse(Base64.decode64(node.content)).to_mash
           incall_for(token).receive(data)
+          send_result(stanza)
         end
 
         def handle_job_end(stanza, node, token)
           incall_for(token).complete
+          send_result(stanza)
         end
 
         def handle_result(stanza, node, token)

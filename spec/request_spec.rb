@@ -6,13 +6,13 @@ describe "A request on pelvis" do
 
   before(:each) do
     @agents = [
-      [:foo, [Simple]],
-      [:bar],
+      [:herault,  [Herault]],
+      [:foo,      [Simple]],
+      [:bar,      []],
     ]
   end
 
   it "works when the identity is specified" do
-    @disable_advertise = true
     results = TestDelegate.new
     start_agents do |agent|
       agent.request(:direct, "/number", {:number => 1, :hash => { :one => 2 }}, :identities => [identity_for(:foo)], :delegate => results)
@@ -21,10 +21,19 @@ describe "A request on pelvis" do
   end
 
   it "discovers through herault when identities are not specified" do
-    @agents.unshift([:herault, [Herault]])
     results = TestDelegate.new
     start_agents do |agent|
       agent.request(:all, "/number", {:number => 1, :hash => { :one => 2 }}, :delegate => results)
+    end
+    should_be_good(results)
+  end
+
+  it "errors when the remote end is down" do
+    pending "This should call into the 'failed' callback"
+
+    results = TestDelegate.new
+    start_agents do |agent|
+      agent.request(:direct, "/number", {:number => 1, :hash => { :one => 2 }}, :identities => ["broken"], :delegate => results)
     end
     should_be_good(results)
   end

@@ -29,7 +29,11 @@ require 'logger'
 
 module Pelvis
   def self.logger
-    @logger ||= Logger.new($stderr)
+    @logger ||= begin
+      l = Logger.new($stderr)
+      l.level = Logger::WARN
+      l
+    end
   end
 
   def self.connect(name, options, &block)

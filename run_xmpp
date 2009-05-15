@@ -11,31 +11,55 @@ require File.dirname(__FILE__) + '/examples/actors/chained'
 require File.dirname(__FILE__) + '/examples/actors/inner'
 require File.dirname(__FILE__) + '/examples/delegates/debugger'
 
-unless ENV["DEBUGGER"]
-  Pelvis.logger.level = Logger::WARN
+if ENV["DEBUGGER"]
+  Pelvis.logger.level = Logger::DEBUG
+  Blather::LOG.level = Logger::DEBUG
 end
-#Blather::LOG.level = Logger::DEBUG
 
-EM.run do
+def connect_herault
   Pelvis.connect(:xmpp, :jid => "herault@localhost/agent", :password => "testing") do |agent|
     agent.actors << Herault
-    puts "herault is ready"
+    agent.on_advertised do
+      puts "herault is ready"
+      connect_chained
+    end
   end
+end
 
+def connect_chained
   Pelvis.connect(:xmpp, :jid => "dummy@localhost/agent", :password => "testing") do |agent|
     agent.actors << Randomz
     agent.actors << Chained
-    puts "chained is ready"
+
+    agent.on_advertised do
+      puts "chained is ready"
+      connect_inner
+    end
   end
+end
 
-  #Pelvis.connect(:xmpp, :jid => "dummy2@localhost/agent", :password => "testing") do |agent|
-    #agent.actors << Inner
-    #puts "inner is ready"
-  #end
+def connect_inner
+  Pelvis.connect(:xmpp, :jid => "dummy2@localhost/agent", :password => "testing") do |agent|
+    agent.actors << Inner
 
-  #Pelvis.connect(:xmpp, :jid => "admin@localhost/agent", :password => "testing") do |agent|
-    #puts "bar is ready"
-    #agent.request(:all, "/do/random", {}, :delegate => Debugger.new)
-    #agent.request(:all, "/chained", {}, :delegate => Debugger.new)
-  #end
+    agent.on_advertised do
+      puts "inner is ready"
+      connect_bar
+    end
+  end
+end
+
+def connect_bar
+  Pelvis.connect(:xmpp, :jid => "admin@localhost/agent", :password => "testing") do |agent|
+    agent.on_advertised do
+      puts "bar is ready"
+
+      agent.request(:all, "/do/random", {}, :delegate => Debugger.new)
+      agent.request(:all, "/chained", {}, :delegate => Debugger.new)
+    end
+  end
+end
+
+EM.run do
+  connect_herault
 end

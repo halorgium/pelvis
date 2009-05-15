@@ -30,12 +30,9 @@ module Pelvis
     def agent_connect(agents, &block)
       agent, actors = *agents.shift
       options = CONFIGS[agent].dup
-      options[:advertise] = false if @disable_advertise
       connection = Pelvis.connect(PROTOCOL.registered_as, options) do |agent|
-        if actors
-          actors.each do |actor|
-            agent.actors << actor
-          end
+        actors.each do |actor|
+          agent.actors << actor
         end
 
         if agents.empty?

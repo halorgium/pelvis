@@ -23,11 +23,14 @@ module Pelvis
 
       def call(stanza)
         logger.debug "got a stanza for #{identity}:\n#{stanza.inspect}"
-        if stanza.is_a?(Blather::SASLError)
+
+        if stanza.is_a?(Blather::BlatherError)
           failed stanza.message
           return
         end
-        remote_agent = agent_for(stanza["from"])
+
+        from = stanza["from"]
+        remote_agent = agent_for(from)
         node = stanza.find("job").first
         token = node["token"]
 
