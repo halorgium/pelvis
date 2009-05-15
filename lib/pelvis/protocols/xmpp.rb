@@ -79,4 +79,3 @@ end
 
 require 'pelvis/protocols/xmpp/remote_agent'
 require 'pelvis/protocols/xmpp/incall'
-require 'pelvis/protocols/xmpp/evocation'
