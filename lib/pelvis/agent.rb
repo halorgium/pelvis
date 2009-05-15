@@ -78,7 +78,7 @@ module Pelvis
 
     def advertise
       unless @protocol.advertise?
-        logger.debug "Not advertising cause I am herault"
+        logger.debug "Not advertising"
         advertised
         return
       end

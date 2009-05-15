@@ -15,7 +15,7 @@ describe "A request on pelvis" do
   it "works when the identity is specified" do
     results = TestDelegate.new
     start_agents do |agent|
-      agent.request(:direct, "/number", {:number => 1, :hash => { :one => 2 }}, :identities => [identity_for(:foo)], :delegate => results)
+      agent.request(:direct, "/echo", {:number => 1, :hash => { :one => 2 }}, :identities => [identity_for(:foo)], :delegate => results)
     end
     should_be_good(results)
   end
@@ -23,7 +23,7 @@ describe "A request on pelvis" do
   it "discovers through herault when identities are not specified" do
     results = TestDelegate.new
     start_agents do |agent|
-      agent.request(:all, "/number", {:number => 1, :hash => { :one => 2 }}, :delegate => results)
+      agent.request(:all, "/echo", {:number => 1, :hash => { :one => 2 }}, :delegate => results)
     end
     should_be_good(results)
   end
@@ -33,7 +33,7 @@ describe "A request on pelvis" do
 
     results = TestDelegate.new
     start_agents do |agent|
-      agent.request(:direct, "/number", {:number => 1, :hash => { :one => 2 }}, :identities => ["broken"], :delegate => results)
+      agent.request(:direct, "/echo", {:number => 1, :hash => { :one => 2 }}, :identities => ["broken"], :delegate => results)
     end
     should_be_good(results)
   end
@@ -52,7 +52,7 @@ describe "A request on pelvis" do
       results = TestDelegate.new
       resp = {'number' => 1, 'other' => { 'asdf' => "foo" } }
       start_agents do |agent|
-        agent.request(:all, '/number', resp, :delegate => results)
+        agent.request(:all, '/echo', resp, :delegate => results)
       end
       should_be_good(results, [resp,resp])
     end
@@ -61,7 +61,7 @@ describe "A request on pelvis" do
       results = TestDelegate.new
       resp = {'number' => 1, 'other' => { 'asdf' => "foo" } }
       start_agents do |agent|
-        agent.request(:direct, '/number', resp, :delegate => results)
+        agent.request(:direct, '/echo', resp, :delegate => results)
       end
       should_be_good(results, [resp])
     end

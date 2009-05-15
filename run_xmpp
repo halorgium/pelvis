@@ -17,7 +17,7 @@ if ENV["DEBUGGER"]
 end
 
 def connect_herault
-  Pelvis.connect(:xmpp, :jid => "herault@localhost/agent", :password => "testing") do |agent|
+  Pelvis.connect(:xmpp, :jid => "herault@localhost/agent", :password => "testing", :advertise => false) do |agent|
     agent.actors << Herault
     agent.on_advertised do
       puts "herault is ready"

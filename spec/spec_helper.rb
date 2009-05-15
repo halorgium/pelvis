@@ -36,7 +36,7 @@ class TestDelegate
 end
 
 class Simple < Pelvis::Actor
-  operation "/number" do
+  operation "/echo" do
     send_data params
     finish
   end
