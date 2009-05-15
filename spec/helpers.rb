@@ -49,5 +49,17 @@ module Pelvis
         raise "Error with #{connection.inspect}: #{error.inspect}"
       end
     end
+
+    def should_be_good(results, exp_response=nil)
+      exp_response ||= [{ 'number' => 1, 'hash' => { 'one' => 2 } }]
+      results.should be_completed
+      results.should_not be_failed
+
+      results.data.should == exp_response
+    end
+
+    def should_not_be_good(results)
+      results.should be_failed
+    end
   end
 end

@@ -27,8 +27,10 @@ module Pelvis
         check_complete
       end
       e.on_failed do |error|
-        logger.debug "outcall failed: #{identity}: #{r.inspect}"
+        logger.debug "outcall failed: #{identity}: #{error.inspect}"
+        finish
         check_complete
+        failed(error)
       end
     end
 

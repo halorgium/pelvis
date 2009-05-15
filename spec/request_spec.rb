@@ -7,7 +7,7 @@ describe "A request on pelvis" do
   before(:each) do
     @agents = [
       [:herault,  [Herault]],
-      [:foo,      [Simple]],
+      [:foo,      [Simple, Resourced]],
       [:bar,      []],
     ]
   end
@@ -68,15 +68,26 @@ describe "A request on pelvis" do
   end
 
   describe "that have a resource argument" do
-    it "should only go to an agent that handles that resource and op"
-    
+    it "should only go to an actor that handles that resource and op" do
+      results = TestDelegate.new
+      start_agents do |agent|
+        agent.request(:direct, '/w_resource', {'resources' => ['/howdy']}, :delegate => results)
+      end
+      should_be_good(results, [{'message' => 'howdy'}])
+    end
+
+    it "should fail when sent to an actor that can't handle the resource" do
+      results = TestDelegate.new
+      start_agents do |agent|
+        agent.request(:direct, '/w_resource', {:resources => ['/not_valid']}, :delegate => results)
+      end
+      should_not_be_good(results)
+    end
+
   end
 
-  def should_be_good(results, exp_response=nil)
-    exp_response ||= [{ 'number' => 1, 'hash' => { 'one' => 2 } }]
-    results.should be_completed
-    results.should_not be_failed
-
-    results.data.should == exp_response
+  describe "that don't have a resource argument" do
+    it "should fail when sent to an actor that uses resources"
   end
+
 end

@@ -35,6 +35,19 @@ class TestDelegate
   end
 end
 
+class Resourced < Pelvis::Actor
+  operation "/w_resource", :stuff
+   
+  def self.resources
+    ['/howdy']
+  end
+
+  def stuff
+    send_data 'message' => 'howdy'
+    finish
+  end
+end
+
 class Simple < Pelvis::Actor
   operation "/echo", :echo
   

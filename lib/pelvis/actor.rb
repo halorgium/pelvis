@@ -41,8 +41,8 @@ module Pelvis
       end
 
       def resources
-        # Should be overriden where appropriate
-        []
+        # Should be overriden where appropriate, nil means don't need resources
+        nil
       end
     end
 
@@ -57,7 +57,17 @@ module Pelvis
 
     def start
       @started_at = Time.now
+      if self.class.resources
+        my_resources = [params[:resources]].flatten.compact & self.class.resources
+        if my_resources.empty?
+          raise "invalid resources #{params[:resources]} supplied"
+        end
+        params[:resources] = my_resources
+      end
+
       send(@operation)
+    rescue => e
+      @invocation.failed(e.message)
     end
 
     def finish

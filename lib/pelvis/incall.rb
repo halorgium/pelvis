@@ -36,7 +36,9 @@ module Pelvis
       end
       i.on_failed do |error|
         logger.debug "invocation failed :#{operation}: #{error.inspect}"
+        finish
         check_complete
+        failed(error)
       end
     end
 
