@@ -36,7 +36,7 @@ module Pelvis
       end
       o.on_failed do |error|
         logger.debug "outcall failed: #{error.inspect}"
-        delegate.failed(event)
+        delegate.failed(error)
       end
       o
     end
