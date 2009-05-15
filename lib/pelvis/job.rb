@@ -10,24 +10,7 @@ module Pelvis
         raise ArgumentError, "Scope #{scope.inspect} is not valid"
       end
       @token, @scope, @operation, @args, @options = token, scope, operation, args, options
-      #delegate
     end
     attr_reader :token, :scope, :operation, :args, :options, :parent
-
-    def receive(data)
-      delegate.receive(data)
-    end
-
-    def complete(event)
-      delegate.complete(event)
-    end
-
-    def error(event)
-      delegate.error(event)
-    end
-
-    def delegate
-      @options[:delegate] || raise("No delegate specified")
-    end
   end
 end

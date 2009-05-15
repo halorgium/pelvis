@@ -1,44 +1,42 @@
 module Pelvis
   class Agent
     include Logging
-    include EM::Deferrable
+    extend Callbacks
 
-    def self.disable_advertisement=(arg)
-      @should_advertise = arg
-    end
+    callbacks :advertised
 
-    def self.disable_advertisement
-      @should_advertise
-    end
-
-    def self.start(*args)
-      new(*args).start
-    end
-
-    def initialize(protocol, actors)
-      @protocol, @actors = protocol, actors
+    def initialize(protocol)
+      @protocol = protocol
     end
     attr_reader :protocol
 
     def start
-      logger.debug "Starting an agent: #{@protocol.inspect}, #{@actors.inspect}"
-      advertise
-      self
+      logger.debug "Starting an agent: #{@protocol.inspect}"
     end
 
     def job
-      @job ||= Job.create(gen_token, :init, "/init", {}, :delegate => DefaultDelegate.new)
+      @job ||= Job.create(gen_token, :init, "/init", {})
     end
 
     def request(scope, operation, args, options)
-      args = JSON.parse(args.to_json) # serialize/unserialize attrs to wipe out symbols etc, makes locally dispatched same as remote
+      # TODO: Shift this to the local protocol
+      # serialize/unserialize attrs to wipe out symbols etc, makes locally dispatched same as remote
+      args = JSON.parse(args.to_json).to_mash
+      delegate = options.delete(:delegate)
       job = Job.create(gen_token, scope, operation, args, options)
+
       o = Outcall.start(self, job)
-      o.callback do |r|
-        logger.debug "outcall callback: #{r.inspect}"
+      o.on_received do |data|
+        logger.debug "outcall received: #{data.inspect}"
+        delegate.received(data)
       end
-      o.errback do |r|
-        logger.debug "outcall errback: #{r.inspect}"
+      o.on_completed do |event|
+        logger.debug "outcall completed: #{event.inspect}"
+        delegate.completed(event)
+      end
+      o.on_failed do |error|
+        logger.debug "outcall failed: #{error.inspect}"
+        delegate.failed(event)
       end
       o
     end
@@ -52,7 +50,7 @@ module Pelvis
     end
 
     def actors
-      @actors || []
+      @actors ||= []
     end
 
     def deliver_to(*args)
@@ -67,26 +65,21 @@ module Pelvis
         @agent = agent
       end
 
-      def complete(data)
+      def completed(data)
         logger.debug "Advertised successfully"
-        @agent.succeed("Advertised successfully")
+        @agent.advertised
       end
 
       def error(data)
         logger.debug "Failed to advertise"
-        @agent.fail("Failed to advertise")
+        @agent.error
       end
     end
 
     def advertise
       unless @protocol.advertise?
         logger.debug "Not advertising cause I am herault"
-        succeed(true)
-        return
-      end
-
-      if self.class.disable_advertisement
-        succeed("Not advertising")
+        advertised
         return
       end
 
@@ -97,13 +90,13 @@ module Pelvis
       request(:direct, "/security/advertise", args, :identities => [herault], :delegate => Advertiser.new(self))
     end
 
-    def evoke(evocation)
-      @protocol.evoke(evocation)
+    def evoke(identity, job)
+      @protocol.evoke(identity, job)
     end
 
-    def invoke(evocation)
-      logger.debug "running evocation: #{evocation.inspect}"
-      Incall.start(self, evocation)
+    def invoke(identity, job)
+      logger.debug "running job from #{identity.inspect}: #{job.inspect}"
+      Incall.start(self, identity, job)
     end
 
     def operations_for(job)

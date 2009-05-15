@@ -1,10 +1,14 @@
+gem 'eventmachine', '>= 0.12.7'
 require 'eventmachine'
+require 'json'
 require 'hmac-sha2'
 require 'extlib'
 
 $:.unshift File.dirname(__FILE__)
 
 require 'pelvis/logging'
+require 'pelvis/callbacks'
+
 require 'pelvis/job'
 require 'pelvis/delegate'
 require 'pelvis/agent'
@@ -28,7 +32,7 @@ module Pelvis
     @logger ||= Logger.new($stderr)
   end
 
-  def self.connect(protocol_name, protocol_options, &block)
-    Protocols.connect(protocol_name, protocol_options, &block)
+  def self.connect(name, options, &block)
+    Protocols.start(name, options, &block)
   end
 end

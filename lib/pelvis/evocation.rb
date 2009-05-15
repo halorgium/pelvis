@@ -1,36 +1,33 @@
 module Pelvis
   class Evocation
     include Logging
-    include EM::Deferrable
+    extend Callbacks
 
-    def self.start(*args, &block)
-      new(*args).start(&block)
-    end
+    callbacks :received, :completed, :failed
 
     def initialize(outcall, identity)
       @outcall, @identity = outcall, identity
     end
     attr_reader :outcall, :identity
 
-    def start(&block)
+    def start
       logger.debug "starting evocation: #{@identity.inspect}"
-      incall = agent.evoke(self)
-      logger.debug "got an incall: #{incall.inspect}"
-      incall.callback do |data|
-        logger.debug "callback from incall: #{incall.inspect}: #{data.inspect}"
-        complete(data)
+      incall = agent.evoke(@identity, job)
+      incall.on_received do |data|
+        logger.debug "incall received: #{@identity.inspect}: #{data.inspect}"
+        received(data)
       end
-      incall.errback do |data|
-        logger.debug "errback from incall: #{incall.inspect}: #{data.inspect}"
-        fail(data)
+      incall.on_completed do |event|
+        logger.debug "incall completed: #{@identity.inspect}: #{event.inspect}"
+        finish
+        completed(event)
+      end
+      incall.on_failed do |error|
+        logger.debug "incall failed: #{@identity.inspect}: #{error.inspect}"
+        finish
+        failed(error)
       end
       @started_at = Time.now
-      self
-    end
-
-    def receive(data)
-      logger.debug "received data from incall: #{data.inspect}"
-      @outcall.receive(self, data)
     end
 
     def agent
@@ -41,17 +38,16 @@ module Pelvis
       @outcall.job
     end
 
-    def complete(data)
-      @completed_at = Time.now
-      succeed(data)
+    def finish
+      @finished_at = Time.now
     end
 
-    def complete?
-      !!@completed_at
+    def finished?
+      @finished_at
     end
 
     def duration
-      complete? ? @completed_at - @started_at : Time.now - @started_at
+      finished? ? @finished_at - @started_at : Time.now - @started_at
     end
 
     def inspect

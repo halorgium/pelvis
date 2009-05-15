@@ -3,28 +3,26 @@ module Pelvis
     class XMPP
       class Incall
         include Logging
-        include EM::Deferrable
+        extend Callbacks
 
-        def initialize(agent, evocation)
-          @agent, @evocation = agent, evocation
+        callbacks :received, :completed, :failed
+
+        def initialize(agent, job)
+          @agent, @job = agent, job
         end
+        attr_reader :job
 
         def start
           @agent.send_init(job.token, job.scope, job.operation, job.args)
-          self
         end
 
         def receive(data)
           logger.debug "received data: #{data.inspect}"
-          @evocation.receive(data)
+          received(data)
         end
 
         def complete
-          succeed("completed: #{job.token}")
-        end
-
-        def job
-          @evocation.job
+          completed("done")
         end
       end
     end

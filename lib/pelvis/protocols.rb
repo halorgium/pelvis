@@ -4,10 +4,10 @@ module Pelvis
       @available ||= {}
     end
 
-    def self.connect(name, *args, &block)
+    def self.start(name, *args, &block)
       name = name.to_sym
       klass = available[name] || raise("No protocol called #{name.to_sym.inspect}")
-      klass.connect(*args, &block)
+      klass.start(*args, &block)
     end
   end
 end

@@ -1,64 +1,60 @@
 module Pelvis
   class Incall
     include Logging
-    include EM::Deferrable
+    extend Callbacks
 
-    def self.start(*args)
-      new(*args).start
-    end
+    callbacks :received, :completed, :failed
 
-    def initialize(agent, evocation)
-      @agent, @evocation = agent, evocation
+    def initialize(agent, source, job)
+      @agent, @source, @job = agent, source, job
     end
-    attr_reader :agent, :evocation
+    attr_reader :agent, :source, :job
 
     def start
-      logger.debug "starting incall on #{@agent.identity}: #{@evocation.inspect}"
+      logger.debug "starting incall on #{@agent.identity}: #{@job.inspect}"
       # TODO: This needs to authorize the job
       operations.each do |o|
         invoke(*o)
       end
       check_complete
-      self
     end
 
     def invoke(actor_klass, operation)
       i = Invocation.start(self, actor_klass, operation)
       invocations << i
-      i.callback do |r|
-        logger.debug "callback from #{operation}: #{r.inspect}"
+      i.on_received do |data|
+        logger.debug "invocation received: #{operation}: #{data.inspect}"
+        received(data)
+      end
+      i.on_completed do |event|
+        logger.debug "invocation completed: #{operation}: #{event.inspect}"
         check_complete
       end
-      i.errback do |r|
-        logger.debug "errback from #{operation}: #{r.inspect}"
+      i.on_failed do |error|
+        logger.debug "invocation failed :#{operation}: #{error.inspect}"
         check_complete
       end
-    end
-
-    def receive(invocation, data)
-      logger.debug "data from #{invocation.inspect}: #{data.inspect}"
-      @evocation.receive(data)
     end
 
     def check_complete
-      return if complete?
-      if invocations.all? {|e| e.complete?}
+      return if finished?
+      if invocations.all? {|i| i.finished?}
         logger.debug "All invocations are finished"
-        @complete = true
-        succeed "Done at #{Time.now}"
+        finish
+        completed "Done at #{Time.now}"
       end
     end
 
-    def complete?
-      @complete
+    def finish
+      @finished_at = Time.now
+    end
+
+    def finished?
+      @finished_at
     end
 
     def router
       @agent.router
-    end
-
-    def job
-      @evocation.job
     end
 
     def invocations
@@ -70,7 +66,7 @@ module Pelvis
     end
 
     def inspect
-      "#<#{self.class} agent=#{agent.inspect} evocation=#{evocation.inspect}>"
+      "#<#{self.class} agent=#{agent.inspect} job=#{job.inspect}>"
     end
   end
 end

@@ -1,29 +1,33 @@
 module Pelvis
   class Invocation
     include Logging
-    include EM::Deferrable
+    extend Callbacks
 
-    def self.start(*args)
-      new(*args).start
-    end
+    callbacks :received, :completed, :failed
 
     def initialize(incall, actor_klass, operation)
       @incall, @actor_klass, @operation = incall, actor_klass, operation
-      @actor = @actor_klass.new(self)
     end
     attr_reader :incall, :actor_klass, :operation, :actor
 
     def start
       logger.debug "starting invocation: #{@actor_klass.inspect}, #{@operation.inspect}"
-      @actor.run(@operation)
-      self
-    end
-
-    def receive(data)
-      logger.debug "received data from operation #{@operation}: #{data.inspect}"
-      data = data.data if data.kind_of? Message # allow passing the message object back, for chained requests
-      raise "Data is not a hash: #{data.inspect}" unless data.is_a?(Hash)
-      @incall.receive(self, data)
+      actor = @actor_klass.start(self, @operation)
+      actor.on_received do |data|
+        logger.debug "operation received: #{@operation.inspect}: #{data.inspect}"
+        raise "Data is not a hash: #{data.inspect}" unless data.is_a?(Hash)
+        received(data)
+      end
+      actor.on_completed do |event|
+        logger.debug "operation completed: #{@operation.inspect}: #{event.inspect}"
+        finish
+        completed(event)
+      end
+      actor.on_failed do |error|
+        logger.debug "operation failed: #{@operation}: #{error.inspect}"
+        finish
+        failed(error)
+      end
     end
 
     def agent
@@ -34,26 +38,16 @@ module Pelvis
       @incall.job
     end
 
-    def request(scope, operation, args, options, &block)
+    def request(scope, operation, args, options)
       agent.request(scope, operation, args, options)
     end
 
-    def complete(data)
-      return if complete?
-      logger.debug "completed operation #{@operation}: #{data.inspect}"
-      @complete = true
-      succeed(data)
+    def finish
+      @finished_at = Time.now
     end
 
-    def error(data)
-      return if complete?
-      logger.debug "failed operation #{@operation}: #{data.inspect}"
-      @complete = true
-      fail(data)
-    end
-
-    def complete?
-      @complete
+    def finished?
+      @finished_at
     end
   end
 end

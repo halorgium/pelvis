@@ -4,7 +4,7 @@ require File.dirname(__FILE__) + '/../lib/pelvis'
 require 'pelvis/protocols/xmpp'
 
 class TestDelegate
-  include Pelvis::Delegate
+  include Pelvis::SafeDelegate
 
   def initialize(stop_on_complete=true)
     @data = []
@@ -16,29 +16,29 @@ class TestDelegate
     @completed
   end
 
-  def errored?
-    @errored
+  def failed?
+    @failed
   end
 
-  def receive(data)
+  def received(data)
     @data << data
   end
 
-  def complete(event)
+  def completed(event)
     @completed = event
-    EM.stop if @stop
+    EM.stop # if @stop
   end
 
-  def error(event)
-    @errored = error
+  def failed(error)
+    @failed = error
     EM.stop
   end
 end
 
 class Simple < Pelvis::Actor
   operation "/number" do
-    invocation.receive(args)
-    invocation.complete("awesome")
+    send_data params
+    finish
   end
 end
 

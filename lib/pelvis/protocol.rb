@@ -1,7 +1,7 @@
 module Pelvis
   class Protocol
     include Logging
-    include EM::Deferrable
+    extend Callbacks
 
     def self.register(name)
       @registered_as = name.to_sym
@@ -12,53 +12,42 @@ module Pelvis
       @registered_as
     end
 
-    def self.start(*args)
-      p = new(*args)
-      EM.next_tick do
-        p.start
-      end
-      p
-    end
-
-    def self.callback(*names)
-      names.each do |name|
-        class_eval <<-EOC
-          def on_#{name}(*a, &b)
-            cb = EM::Callback(*a, &b)
-            @_on_#{name} ||= []
-            @on_#{name} << cb
-            cb[*@_name_data] if @_name == #{name.to_sym.inspect}
-          end
-          def #{name}(*a)
-            @_name = #{name.to_sym.inspect}
-            @_name_data = a
-            Array(@_on_#{name}).each { |cb| cb[*a] }
-            yield(*a) if block_given? # A tail run after other callbacks.
-          end
-        EOC
-      end
-    end
-
-    callback :configure
+    callbacks :connected, :spawned, :failed
 
     def initialize(options, &block)
-      @options = options
-      on_configure(&block)
+      @options = {:advertise => true}.merge(options)
+      @configure_block = block
+      on_connected do
+        spawn
+      end
+      on_failed do |error|
+        logger.error "Failed to connect: #{error}"
+      end
     end
     attr_reader :options, :agent
 
-    def spawn
-      logger.debug "Connected to protocol: #{inspect}"
-      agent = Agent.start(self)
-      configure(agent)
+    def start
+      connect
     end
 
-    def evoke(job)
-      raise "Implement #evoke on #{self.class}"
+    def spawn
+      logger.debug "Connected to protocol: #{inspect}"
+      @agent = Agent.start(self)
+      spawned(@agent)
+      @configure_block.call(@agent)
+      @agent.advertise
+    end
+
+    def advertise?
+      options[:advertise]
     end
 
     def connect
       raise "Implement #connect on #{self.class}"
+    end
+
+    def evoke(job)
+      raise "Implement #evoke on #{self.class}"
     end
 
     def identity
@@ -67,9 +56,6 @@ module Pelvis
 
     def herault
       raise "Implement #herault on #{self.class}"
-    end
-
-    def on_spawn(agent)
     end
 
     def inspect

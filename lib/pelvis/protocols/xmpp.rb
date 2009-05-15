@@ -19,11 +19,15 @@ module Pelvis
 
       def stopped
         logger.warn "Got disconnected"
-        fail("disconnected")
+        failed "disconnected"
       end
 
       def call(stanza)
-        logger.debug "got a stanza for #{identity}: #{stanza.inspect}"
+        logger.debug "got a stanza for #{identity}:\n#{stanza.inspect}"
+        if stanza.is_a?(Blather::SASLError)
+          failed stanza.message
+          return
+        end
         remote_agent = agent_for(stanza["from"])
         node = stanza.find("job").first
         token = node["token"]
@@ -39,8 +43,8 @@ module Pelvis
         end
       end
 
-      def evoke(evocation)
-        agent_for(evocation.identity).evoke(evocation)
+      def evoke(identity, job)
+        agent_for(identity).evoke(job)
       end
 
       def agent_for(identity)

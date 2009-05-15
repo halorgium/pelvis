@@ -9,18 +9,17 @@ module Pelvis
 
       def connect
         logger.debug "connecting using #{self.class}: identity=#{identity.inspect}"
-        spawn
+        on_spawned do |agent|
+          SET << agent
+        end
+        connected
       end
 
-      def on_spawn(agent)
-        SET << agent
-      end
-
-      def evoke(evocation)
-        if agent = agent_for(evocation.identity)
-          agent.invoke(evocation)
+      def evoke(identity, job)
+        if remote_agent = agent_for(identity)
+          remote_agent.invoke(agent.identity, job)
         else
-          raise "Could not find an agent found #{evocation.identity.inspect}"
+          raise "Could not find an agent found #{identity.inspect}"
         end
       end
 
@@ -36,10 +35,6 @@ module Pelvis
 
       def herault
         "herault"
-      end
-
-      def advertise?
-        identity != herault
       end
     end
   end

@@ -11,25 +11,35 @@ require File.dirname(__FILE__) + '/examples/actors/inner'
 require File.dirname(__FILE__) + '/examples/delegates/debugger'
 
 def connect_herault
-  Pelvis.connect(:local, {:identity => "herault"}, [Herault]) do |agent|
-    puts "herault is ready"
-    connect_foo
+  Pelvis.connect(:local, :identity => "herault") do |agent|
+    agent.actors << Herault
+    agent.on_advertised do
+      puts "herault is ready"
+      connect_foo
+    end
   end
 end
 
 def connect_foo
-  Pelvis.connect(:local, {:identity => "foo"}, [Randomz]) do |agent|
-    puts "foo is ready"
-    connect_bar
+  Pelvis.connect(:local, :identity => "foo") do |agent|
+    agent.actors << Randomz
+    agent.on_advertised do
+      puts "foo is ready"
+      connect_bar
+    end
   end
 end
 
 def connect_bar
   Pelvis.connect(:local, {:identity => "bar"}) do |agent|
-    puts "bar is ready"
-    agent.request(:all, "/do/random", {}, :identities => ["foo"], :delegate => Debugger.new)
+    agent.on_advertised do
+      puts "bar is ready"
+      agent.request(:all, "/do/random", {}, :identities => ["foo"], :delegate => Debugger.new)
+    end
   end
 end
+
+Pelvis.logger.level = Logger::WARN
 
 EM.run do
   connect_herault

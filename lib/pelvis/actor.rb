@@ -1,15 +1,25 @@
 module Pelvis
   class Actor
     include Logging
+    extend Callbacks
+
+    callbacks :received, :completed, :failed
 
     class << self
       include Logging
 
-      def operation(*names, &block)
-        names.each do |operation|
-          provided_operations << operation
-          operation_methods[operation] << block
-        end
+      def operation(name, &block)
+        define_method "operation #{name}", &block
+        unbound_method = instance_method("operation #{name}")
+        block =
+          if block.arity != 0
+            lambda { unbound_method.bind(self).call(*@block_params) }
+          else
+            lambda { unbound_method.bind(self).call }
+          end
+
+        provided_operations << name
+        operation_methods[name] << block
       end
 
       def lookup_op(operation)
@@ -53,19 +63,46 @@ module Pelvis
     end
 
     # TODO: Enable config and deployment resources
-    def initialize(invocation) #, config, deployment_resources)
-      @invocation = invocation
+    def initialize(invocation, operation) #, config, deployment_resources)
+      @invocation, @operation = invocation, operation
+      @block_params = []
       #@config = config
       #@deployment_resources = deployment_resources || KeyedResources.new
     end
     attr_reader :invocation
 
-    def args
-      invocation.job.args
+    def start
+      @started_at = Time.now
+      instance_eval(&@operation)
     end
 
-    def run(block)
-      instance_eval(&block)
+    def finish
+      @finished_at = Time.now
+      completed "Duration: #{duration}"
+    end
+
+    def finished?
+      @finished_at
+    end
+
+    def duration
+      finished? ? @finished_at - @started_at : Time.now - @started_at
+    end
+
+    def request(*args)
+      @invocation.request(*args)
+    end
+
+    def send_data(data)
+      received(data)
+    end
+
+    def job
+      @invocation.job
+    end
+
+    def params
+      job.args
     end
   end
 end

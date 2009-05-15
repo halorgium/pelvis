@@ -1,12 +1,16 @@
 class Debugger
   include Pelvis::Delegate
 
-  def receive(data)
+  def received(data)
     log "Received data: #{data.inspect}"
   end
 
-  def complete(event)
+  def completed(event)
     log "Completed with #{event.inspect}"
+  end
+
+  def failed(error)
+    log "Failed with #{error.inspect}"
   end
 
   def log(message)
