@@ -60,6 +60,10 @@ module Pelvis
     end
     attr_reader :invocation
 
+    def args
+      invocation.job.args
+    end
+
     def run(block)
       instance_eval(&block)
     end

@@ -3,6 +3,14 @@ module Pelvis
     include Logging
     include EM::Deferrable
 
+    def self.disable_advertisement=(arg)
+      @should_advertise = arg
+    end
+
+    def self.disable_advertisement
+      @should_advertise
+    end
+
     def self.start(*args)
       new(*args).start
     end
@@ -14,8 +22,7 @@ module Pelvis
 
     def start
       logger.debug "Starting an agent: #{@protocol.inspect}, #{@actors.inspect}"
-      succeed("Advertised successfully")
-      #advertise
+      advertise
       self
     end
 
@@ -24,6 +31,7 @@ module Pelvis
     end
 
     def request(scope, operation, args, options)
+      args = JSON.parse(args.to_json) # serialize/unserialize attrs to wipe out symbols etc, makes locally dispatched same as remote
       job = Job.create(gen_token, scope, operation, args, options)
       o = Outcall.start(self, job)
       o.callback do |r|
@@ -74,6 +82,11 @@ module Pelvis
       unless @protocol.advertise?
         logger.debug "Not advertising cause I am herault"
         succeed(true)
+        return
+      end
+
+      if self.class.disable_advertisement
+        succeed("Not advertising")
         return
       end
 

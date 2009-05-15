@@ -33,7 +33,7 @@ module Pelvis
 
     def receive(evocation, data)
       logger.debug "data from #{evocation.inspect}: #{data.inspect}"
-      @job.receive(data)
+      @job.receive(Message.new(evocation, data))
     end
 
     def check_complete
@@ -65,7 +65,6 @@ module Pelvis
       if identities = @job.options[:identities]
         evoke_to(identities)
       else
-        raise "Disabled herault, provide identities to the job"
         discover_with_herault
       end
     end

@@ -6,8 +6,9 @@ require 'pelvis/protocols/xmpp'
 class TestDelegate
   include Pelvis::Delegate
 
-  def initialize
+  def initialize(stop_on_complete=true)
     @data = []
+    @stop = stop_on_complete
   end
   attr_reader :data
 
@@ -25,7 +26,7 @@ class TestDelegate
 
   def complete(event)
     @completed = event
-    EM.stop
+    EM.stop if @stop
   end
 
   def error(event)
@@ -36,11 +37,11 @@ end
 
 class Simple < Pelvis::Actor
   operation "/number" do
-    invocation.receive("number" => 1)
+    invocation.receive(args)
     invocation.complete("awesome")
   end
 end
 
 require File.dirname(__FILE__) + '/helpers'
 
-Pelvis.logger.level = Logger::WARN
+Pelvis.logger.level = Logger::ERROR

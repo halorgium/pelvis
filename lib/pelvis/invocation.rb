@@ -21,6 +21,7 @@ module Pelvis
 
     def receive(data)
       logger.debug "received data from operation #{@operation}: #{data.inspect}"
+      data = data.data if data.kind_of? Message # allow passing the message object back, for chained requests
       raise "Data is not a hash: #{data.inspect}" unless data.is_a?(Hash)
       @incall.receive(self, data)
     end
@@ -33,8 +34,8 @@ module Pelvis
       @incall.job
     end
 
-    def request(operation, args, options, &block)
-      agent.request(operation, args, options, self, &block)
+    def request(scope, operation, args, options, &block)
+      agent.request(scope, operation, args, options)
     end
 
     def complete(data)
