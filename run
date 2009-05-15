@@ -39,7 +39,9 @@ def connect_bar
   end
 end
 
-Pelvis.logger.level = Logger::WARN
+unless ENV["DEBUGGER"]
+  Pelvis.logger.level = Logger::WARN
+end
 
 EM.run do
   connect_herault

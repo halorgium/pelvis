@@ -14,12 +14,11 @@ module Pelvis
       attr_reader :stream
 
       def stream_started(stream)
-        spawn
+        connected
       end
 
       def stopped
         logger.warn "Got disconnected"
-        failed "disconnected"
       end
 
       def call(stanza)
@@ -31,15 +30,21 @@ module Pelvis
         remote_agent = agent_for(stanza["from"])
         node = stanza.find("job").first
         token = node["token"]
-        case node["type"]
-        when "init"
-          remote_agent.invoke(token, node)
-        when "data"
-          remote_agent.receive(token, node)
-        when "final"
-          remote_agent.complete(token, node)
+
+        type = node["type"]
+        unless %w( init begin data end ).include?(type)
+          raise "Unable to handle job XML of type: #{type.inspect}"
+        end
+
+        case stanza["type"]
+        when "set"
+          remote_agent.send("handle_job_#{type}", stanza, node, token)
+        when "result"
+          remote_agent.handle_result(stanza, node, token)
+        when "error"
+          remote_agent.handle_error(stanza, node, token)
         else
-          raise "Unable to handle job XML of type: #{node['type'].inspect}"
+          raise "Unable to handle weird IQ with type: #{stanza["type"].inspect}"
         end
       end
 

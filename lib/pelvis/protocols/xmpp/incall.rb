@@ -5,7 +5,7 @@ module Pelvis
         include Logging
         extend Callbacks
 
-        callbacks :received, :completed, :failed
+        callbacks :initialized, :begun, :received, :completed, :failed
 
         def initialize(agent, job)
           @agent, @job = agent, job
@@ -13,7 +13,18 @@ module Pelvis
         attr_reader :job
 
         def start
-          @agent.send_init(job.token, job.scope, job.operation, job.args)
+          @agent.send_job_init(job.token, job.scope, job.operation, job.args) do |reply|
+            initialized
+          end
+        end
+
+        def handle_begin(stanza)
+          @begin_stanza = stanza
+          begun
+        end
+
+        def begin
+          @agent.send_result(@begin_stanza)
         end
 
         def receive(data)

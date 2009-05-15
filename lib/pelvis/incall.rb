@@ -3,7 +3,7 @@ module Pelvis
     include Logging
     extend Callbacks
 
-    callbacks :received, :completed, :failed
+    callbacks :initialized, :begun, :received, :completed, :failed
 
     def initialize(agent, source, job)
       @agent, @source, @job = agent, source, job
@@ -12,7 +12,11 @@ module Pelvis
 
     def start
       logger.debug "starting incall on #{@agent.identity}: #{@job.inspect}"
-      # TODO: This needs to authorize the job
+      initialized
+      begun
+    end
+
+    def begin
       operations.each do |o|
         invoke(*o)
       end

@@ -11,7 +11,9 @@ require File.dirname(__FILE__) + '/examples/actors/chained'
 require File.dirname(__FILE__) + '/examples/actors/inner'
 require File.dirname(__FILE__) + '/examples/delegates/debugger'
 
-#Pelvis.logger.level = Logger::INFO
+unless ENV["DEBUGGER"]
+  Pelvis.logger.level = Logger::WARN
+end
 #Blather::LOG.level = Logger::DEBUG
 
 EM.run do
@@ -26,14 +28,14 @@ EM.run do
     puts "chained is ready"
   end
 
-  Pelvis.connect(:xmpp, :jid => "dummy2@localhost/agent", :password => "testing") do |agent|
-    agent.actors << Inner
-    puts "inner is ready"
-  end
+  #Pelvis.connect(:xmpp, :jid => "dummy2@localhost/agent", :password => "testing") do |agent|
+    #agent.actors << Inner
+    #puts "inner is ready"
+  #end
 
-  Pelvis.connect(:xmpp, :jid => "admin@localhost/agent", :password => "testing") do |agent|
-    puts "bar is ready"
-    agent.request(:all, "/do/random", {}, :delegate => Debugger.new)
-    agent.request(:all, "/chained", {}, :delegate => Debugger.new)
-  end
+  #Pelvis.connect(:xmpp, :jid => "admin@localhost/agent", :password => "testing") do |agent|
+    #puts "bar is ready"
+    #agent.request(:all, "/do/random", {}, :delegate => Debugger.new)
+    #agent.request(:all, "/chained", {}, :delegate => Debugger.new)
+  #end
 end
