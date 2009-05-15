@@ -12,6 +12,7 @@ require 'pelvis/callbacks'
 require 'pelvis/job'
 require 'pelvis/delegate'
 require 'pelvis/agent'
+require 'pelvis/advertiser'
 require 'pelvis/actor'
 
 require 'pelvis/message'

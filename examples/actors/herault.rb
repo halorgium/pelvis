@@ -5,7 +5,10 @@ class Herault < Pelvis::Actor
     @operation_map ||= {}
   end
 
-  operation "/security/advertise" do
+  operation "/security/advertise", :advertise
+  operation "/security/discover", :discover
+
+  def advertise
     identity = params[:identity]
     params[:operations].each do |operation|
       add_identity_for_operation(identity, operation)
@@ -13,7 +16,7 @@ class Herault < Pelvis::Actor
     finish
   end
 
-  operation "/security/discover" do
+  def discover
     identities = identities_for(params[:operation])
     send_data :identities => identities if identities.any?
     finish

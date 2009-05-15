@@ -36,7 +36,9 @@ class TestDelegate
 end
 
 class Simple < Pelvis::Actor
-  operation "/echo" do
+  operation "/echo", :echo
+  
+  def echo
     send_data params
     finish
   end

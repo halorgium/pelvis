@@ -1,5 +1,7 @@
 class Chained < Pelvis::Actor
-  operation "/chained" do
+  operation "/chained", :chained
+
+  def chained
     send_data :message => "starting chained"
     number = 10
     results = ProxyBack.new(self)

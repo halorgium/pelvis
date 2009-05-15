@@ -8,31 +8,14 @@ module Pelvis
     class << self
       include Logging
 
-      def operation(name, &block)
-        define_method "operation #{name}", &block
-        unbound_method = instance_method("operation #{name}")
-        block =
-          if block.arity != 0
-            lambda { unbound_method.bind(self).call(*@block_params) }
-          else
-            lambda { unbound_method.bind(self).call }
-          end
-
+      def operation(name, method)
         provided_operations << name
-        operation_methods[name] << block
+        operation_methods[name] << method
       end
 
       def lookup_op(operation)
         operation_methods[operation]
       end
-
-      #def provides(*args)
-        #resources = args.last.is_a?(Hash) ? args.pop : {}
-        #raise ArgumentError, "#{args.inspect} need to have keys for each resource" if args.any?
-        #resources.each do |key,resource|
-          #provided_resources.add(key, resource)
-        #end
-      #end
 
       def provided_operations
         @provided_operations ||= []
@@ -43,10 +26,6 @@ module Pelvis
           h[operation] = []
         end
       end
-
-      #def provided_resources
-        #@provided_resources ||= KeyedResources.new
-      #end
 
       def operations_for(job)
         operations = []
@@ -59,6 +38,11 @@ module Pelvis
           end
         end
         operations
+      end
+
+      def resources
+        # Should be overriden where appropriate
+        []
       end
     end
 
@@ -73,7 +57,7 @@ module Pelvis
 
     def start
       @started_at = Time.now
-      instance_eval(&@operation)
+      send(@operation)
     end
 
     def finish

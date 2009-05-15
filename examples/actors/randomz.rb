@@ -1,5 +1,7 @@
 class Randomz < Pelvis::Actor
-  operation "/do/random" do
+  operation "/do/random", :run
+
+  def run
     send_wait(rand(10))
   end
 

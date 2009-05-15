@@ -11,7 +11,7 @@ require File.dirname(__FILE__) + '/examples/actors/inner'
 require File.dirname(__FILE__) + '/examples/delegates/debugger'
 
 def connect_herault
-  Pelvis.connect(:local, :identity => "herault") do |agent|
+  Pelvis.connect(:local, :identity => "herault", :advertise => false) do |agent|
     agent.actors << Herault
     agent.on_advertised do
       puts "herault is ready"

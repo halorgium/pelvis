@@ -53,27 +53,12 @@ module Pelvis
       @actors ||= []
     end
 
-    def deliver_to(*args)
-      @protocol.deliver_to(*args)
+    def add_actor(actor_klass)
+      actors << actor_klass
     end
 
-    class Advertiser
-      include Delegate
-      include Logging
-
-      def initialize(agent)
-        @agent = agent
-      end
-
-      def completed(data)
-        logger.debug "Advertised successfully"
-        @agent.advertised
-      end
-
-      def error(data)
-        logger.debug "Failed to advertise"
-        @agent.error
-      end
+    def deliver_to(*args)
+      @protocol.deliver_to(*args)
     end
 
     def advertise
@@ -83,11 +68,7 @@ module Pelvis
         return
       end
 
-      args = {:identity => identity, :operations => []}
-      actors.each do |actor|
-        args[:operations] += actor.provided_operations
-      end
-      request(:direct, "/security/advertise", args, :identities => [herault], :delegate => Advertiser.new(self))
+      @advertiser = Advertiser.new(self, actors)
     end
 
     def evoke(identity, job)

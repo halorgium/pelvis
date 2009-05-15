@@ -67,6 +67,11 @@ describe "A request on pelvis" do
     end
   end
 
+  describe "that have a resource argument" do
+    it "should only go to an agent that handles that resource and op"
+    
+  end
+
   def should_be_good(results, exp_response=nil)
     exp_response ||= [{ 'number' => 1, 'hash' => { 'one' => 2 } }]
     results.should be_completed
