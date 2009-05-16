@@ -1,6 +1,5 @@
 class Chained < Pelvis::Actor
-  operation "/chained", :chained
-
+  operation "/chained"
   def chained
     send_data :message => "starting chained"
     number = 10

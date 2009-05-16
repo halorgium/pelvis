@@ -36,12 +36,11 @@ class TestDelegate
 end
 
 class Resourced < Pelvis::Actor
-  operation "/w_resource", :stuff
-   
   def self.resources
     ['/howdy']
   end
 
+  operation "/w_resource"
   def stuff
     send_data 'message' => 'howdy'
     finish
@@ -49,8 +48,7 @@ class Resourced < Pelvis::Actor
 end
 
 class Simple < Pelvis::Actor
-  operation "/echo", :echo
-  
+  operation "/echo"
   def echo
     send_data params
     finish

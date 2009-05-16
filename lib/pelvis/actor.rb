@@ -8,9 +8,18 @@ module Pelvis
     class << self
       include Logging
 
-      def operation(name, method)
+      def operation(name)
+        @op_for_next_method = name
+      end
+
+      # FIXME: If someone doesn't def a method after calling operation
+      # @op_for_next_method will not be cleared and no error will raise
+      # how can we get notified when the class finishes loading... hmmm
+      def method_added(m)
+        return unless name = @op_for_next_method
+        @op_for_next_method = nil
         provided_operations << name
-        operation_methods[name] << method
+        operation_methods[name] << m
       end
 
       def lookup_op(operation)

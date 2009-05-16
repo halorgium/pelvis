@@ -1,6 +1,5 @@
 class Inner < Pelvis::Actor
-  operation "/inner", :inner
-  
+  operation "/inner"
   def inner
     send_data :message => "starting inner: #{params[:number]}"
     EM.add_timer(rand(100) / 40.0) do
