@@ -38,7 +38,7 @@ module Pelvis
           end
           incall.on_failed do |error|
             logger.error "got an error for token: #{token}"
-            send_error(job.token, error)
+            send_job_error(job.token, error)
           end
           incall
         end
@@ -55,6 +55,12 @@ module Pelvis
 
         def handle_job_end(stanza, node, token)
           incall_for(token).complete
+          send_result(stanza)
+        end
+
+        def handle_job_error(stanza, node, token)
+          data = JSON.parse(Base64.decode64(node.content)).to_mash
+          incall_for(token).failed(data)
           send_result(stanza)
         end
 
@@ -105,6 +111,10 @@ module Pelvis
 
         def send_job_end(token, &block)
           send_stanza(:set, "end", nil, :token => token, &block)
+        end
+
+        def send_job_error(token, error, &block)
+          send_stanza(:set, 'error', error, :token => token, &block)
         end
 
         def send_result(stanza)

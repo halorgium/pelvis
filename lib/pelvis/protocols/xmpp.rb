@@ -35,7 +35,7 @@ module Pelvis
         token = node["token"]
 
         type = node["type"]
-        unless %w( init begin data end ).include?(type)
+        unless %w( init begin data end error ).include?(type)
           raise "Unable to handle job XML of type: #{type.inspect}"
         end
 

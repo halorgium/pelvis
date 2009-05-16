@@ -57,4 +57,4 @@ end
 
 require File.dirname(__FILE__) + '/helpers'
 
-Pelvis.logger.level = Logger::ERROR
+Pelvis.logger.level = Logger::FATAL

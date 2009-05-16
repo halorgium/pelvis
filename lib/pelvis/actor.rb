@@ -69,14 +69,18 @@ module Pelvis
       if self.class.resources
         my_resources = [params[:resources]].flatten.compact & self.class.resources
         if my_resources.empty?
-          raise "invalid resources #{params[:resources]} supplied"
+          fail :code => 404, :message => "invalid resources #{params[:resources]} supplied"
         end
         params[:resources] = my_resources
       end
 
       send(@operation)
     rescue => e
-      @invocation.failed(e.message)
+      if @__ERROR__
+        failed(@__ERROR__)
+      else
+        failed(:code => 500, :message => e.message)
+      end
     end
 
     def finish
@@ -106,6 +110,15 @@ module Pelvis
 
     def params
       job.args
+    end
+
+    def fail(data)
+      @__ERROR__ = data
+      raise
+    end
+
+    def failed(*args)
+      @invocation.failed(*args)
     end
   end
 end
