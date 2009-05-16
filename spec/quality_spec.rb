@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
 describe "The library itself" do
-  Spec::Matchers.create :have_no_tab_characters do
+  Spec::Matchers.define :have_no_tab_characters do
     match do |filename|
       @failing_lines = []
       File.readlines(filename).each_with_index do |line,number|
@@ -15,7 +15,7 @@ describe "The library itself" do
     end
   end
 
-  Spec::Matchers.create :have_no_extraneous_spaces do
+  Spec::Matchers.define :have_no_extraneous_spaces do
     match do |filename|
       @failing_lines = []
       File.readlines(filename).each_with_index do |line,number|
