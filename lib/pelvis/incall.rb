@@ -70,9 +70,5 @@ module Pelvis
     def operations
       @agent.operations_for(job)
     end
-
-    def inspect
-      "#<#{self.class} agent=#{agent.inspect} job=#{job.inspect}>"
-    end
   end
 end

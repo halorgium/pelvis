@@ -36,8 +36,8 @@ module Pelvis
         actors.each do |actor|
           agent.actors << actor
         end
- 
-        agent.on_advertised do 
+
+        agent.on_advertised do
           if agents.empty?
             block.call(agent)
           else

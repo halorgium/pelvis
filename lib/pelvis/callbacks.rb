@@ -25,6 +25,7 @@ module Pelvis
             yield(*a) if block_given? # A tail run after other callbacks.
           end
         EOC
+        private name
       end
     end
   end

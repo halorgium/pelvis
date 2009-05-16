@@ -39,7 +39,7 @@ module Pelvis
     end
 
     def request(scope, operation, args, options)
-      agent.request(scope, operation, args, options)
+      agent.request(scope, operation, args, options, job)
     end
 
     def finish

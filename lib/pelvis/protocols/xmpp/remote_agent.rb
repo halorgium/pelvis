@@ -15,7 +15,7 @@ module Pelvis
 
         def handle_job_init(stanza, node, token)
           args = JSON.parse(Base64.decode64(node.content)).to_mash
-          job = Job.new(token, node["scope"], node["operation"], args, {})
+          job = Job.create(token, node["scope"], node["operation"], args, {})
           logger.debug "Job starting: #{job.inspect}"
           incall = @protocol.agent.invoke(@identity, job)
           incall.on_initialized do
@@ -60,7 +60,7 @@ module Pelvis
 
         def handle_job_error(stanza, node, token)
           data = JSON.parse(Base64.decode64(node.content)).to_mash
-          incall_for(token).failed(data)
+          incall_for(token).fail(data)
           send_result(stanza)
         end
 

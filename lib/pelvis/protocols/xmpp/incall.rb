@@ -39,6 +39,10 @@ module Pelvis
         def complete
           completed("done")
         end
+
+        def fail(error)
+          failed(error)
+        end
       end
     end
   end

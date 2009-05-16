@@ -14,16 +14,16 @@ module Pelvis
       logger.debug "Starting an agent: #{@protocol.inspect}"
     end
 
-    def job
-      @job ||= Job.create(gen_token, :init, "/init", {})
+    def initial_job
+      @initial_job ||= Job.create(gen_token, :init, "/init")
     end
 
-    def request(scope, operation, args, options)
+    def request(scope, operation, args, options, parent = nil)
       # TODO: Shift this to the local protocol
       # serialize/unserialize attrs to wipe out symbols etc, makes locally dispatched same as remote
       args = JSON.parse(args.to_json).to_mash
       delegate = options.delete(:delegate)
-      job = Job.create(gen_token, scope, operation, args, options)
+      job = Job.create(gen_token, scope, operation, args, options, parent || initial_job)
 
       o = Outcall.start(self, job)
       o.on_received do |data|
@@ -90,7 +90,7 @@ module Pelvis
     end
 
     def gen_token
-      HMAC::SHA256.hexdigest(Time.now.to_f.to_s, DateTime.now.ajd.to_f.to_s)
+      HMAC::SHA256.hexdigest("#{rand} -- #{Time.now.to_f.to_s}", DateTime.now.ajd.to_f.to_s)
     end
 
     def inspect

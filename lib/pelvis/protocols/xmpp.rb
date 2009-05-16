@@ -13,15 +13,19 @@ module Pelvis
       end
       attr_reader :stream
 
-      def stream_started(stream)
+      def post_init
         connected
       end
 
-      def stopped
+      def unbind
         logger.warn "Got disconnected"
       end
 
-      def call(stanza)
+      def close
+        logger.warn "Got disconnected"
+      end
+
+      def receive_data(stanza)
         logger.debug "got a stanza for #{identity}:\n#{stanza.inspect}"
 
         if stanza.is_a?(Blather::BlatherError)

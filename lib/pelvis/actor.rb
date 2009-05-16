@@ -125,9 +125,5 @@ module Pelvis
       @__ERROR__ = data
       raise
     end
-
-    def failed(*args)
-      @invocation.failed(*args)
-    end
   end
 end

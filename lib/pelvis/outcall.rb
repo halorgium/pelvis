@@ -15,62 +15,6 @@ module Pelvis
       discover
     end
 
-    def evoke(identity)
-      e = Evocation.start(self, identity)
-      evocations << e
-      e.on_received do |data|
-        logger.debug "outcall received: #{identity}: #{data.inspect}"
-        received(data)
-      end
-      e.on_completed do |event|
-        logger.debug "outcall completed: #{identity}: #{event.inspect}"
-        check_complete
-      end
-      e.on_failed do |error|
-        logger.debug "outcall failed: #{identity}: #{error.inspect}"
-        finish
-        check_complete
-        failed(error)
-      end
-    end
-
-    def check_complete
-      return if finished?
-      if evocations.all? {|e| e.finished?}
-        logger.debug "All evocations are finished"
-        finish
-        completed "Done at #{Time.now}"
-      end
-    end
-
-    def finish
-      @finished_at = Time.now
-    end
-
-    def finished?
-      @finished_at
-    end
-
-    def evocations
-      @evocations ||= []
-    end
-
-    def evoke_to(identities)
-      if job.scope == :all
-        identities.each do |i|
-          evoke(i)
-        end
-      elsif job.scope == :direct
-        to = identities[rand(identities.size)]
-        evoke(to)
-      elsif job.scope == :init
-        raise "TODO: I have nfi what this scope does"
-      else
-        raise "Invalid scope #{job.scope} detected"
-      end
-      check_complete
-    end
-
     def discover
       if identities = @job.options[:identities]
         evoke_to(identities)
@@ -99,6 +43,66 @@ module Pelvis
     def discover_with_herault
       @agent.request(:direct, "/security/discover", {:operation => job.operation, :args => job.args},
                      :identities => [@agent.herault], :delegate => HeraultDiscoverer.new(self))
+    end
+
+    def evoke_to(identities)
+      case job.scope
+      when :all
+        identities.each do |i|
+          evoke(i)
+        end
+      when :direct
+        to = identities[rand(identities.size)]
+        evoke(to)
+      when :init
+        raise "You cannot make an request with an 'init' scope"
+      else
+        raise "Invalid scope #{job.scope.inspect} detected"
+      end
+      @all_sent = true
+      check_complete
+    end
+
+    def evoke(identity)
+      e = Evocation.start(self, identity)
+      evocations[e] = false
+      e.on_received do |data|
+        logger.debug "outcall received: #{identity}: #{data.inspect}"
+        received(data)
+      end
+      e.on_completed do |event|
+        logger.debug "outcall completed: #{identity}: #{event.inspect}"
+        evocations[e] = true
+        check_complete
+      end
+      e.on_failed do |error|
+        logger.debug "outcall failed: #{identity}: #{error.inspect}"
+        evocations[e] = true
+        finish
+        failed(error)
+      end
+    end
+
+    def check_complete
+      return unless @all_sent
+      return if finished?
+      if evocations.values.all?
+        logger.debug "All evocations are finished"
+        finish
+        completed "Done at #{Time.now}"
+      end
+    end
+
+    def finish
+      @finished_at = Time.now
+    end
+
+    def finished?
+      @finished_at
+    end
+
+    def evocations
+      @evocations ||= {}
     end
 
     def inspect

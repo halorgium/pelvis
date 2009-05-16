@@ -19,9 +19,21 @@ module Pelvis
         if remote_agent = agent_for(identity)
           remote_agent.invoke(agent.identity, job)
         else
-          i = Incall.new(nil, nil, nil)
-          i.failed(:code => 500, :message =>"Could not find an agent found #{identity.inspect}")
-          i
+          IncallProxy.start(identity, job)
+        end
+      end
+
+      class IncallProxy
+        extend Callbacks
+
+        callbacks :initialized, :begun, :received, :completed, :failed
+
+        def initialize(identity, job)
+          @identity, @job = identity, job
+        end
+
+        def start
+          failed(:code => 404, :message => "Could not find an agent found #{@identity.inspect}")
         end
       end
 
