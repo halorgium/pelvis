@@ -4,6 +4,11 @@ class Randomz < Pelvis::Actor
     send_wait(rand(10))
   end
 
+  operation "/never/works"
+  def broken
+    fail :message => "I am hopelessly broken"
+  end
+
   def send_wait(number)
     wait = random_time
     send_data :message => "remaining #{number} waiting #{wait}"
