@@ -69,6 +69,7 @@ module Pelvis
       end
 
       @advertiser = Advertiser.new(self, actors)
+      @advertiser.on_completed_initial { advertised }
     end
 
     def evoke(identity, job)
