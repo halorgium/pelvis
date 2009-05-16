@@ -29,13 +29,13 @@ describe "A request on pelvis" do
   end
 
   it "errors when the remote end is down" do
-    pending "This should call into the 'failed' callback"
+    #pending "This should call into the 'failed' callback"
 
     results = TestDelegate.new
     start_agents do |agent|
-      agent.request(:direct, "/echo", {:number => 1, :hash => { :one => 2 }}, :identities => ["broken"], :delegate => results)
+      agent.request(:direct, "/echo", {:number => 1, :hash => { :one => 2 }}, :identities => ["broken@localhost"], :delegate => results)
     end
-    should_be_good(results)
+    should_not_be_good(results)
   end
 
   describe "with scope" do
@@ -87,7 +87,13 @@ describe "A request on pelvis" do
   end
 
   describe "that don't have a resource argument" do
-    it "should fail when sent to an actor that uses resources"
+    it "should fail when sent to an actor that uses resources" do
+      results = TestDelegate.new
+      start_agents do |agent|
+        agent.request(:direct, '/w_resource', {:test => 'bla'}, :identities => [identity_for(:foo)], :delegate => results)
+      end
+      should_not_be_good(results)
+    end
   end
 
 end

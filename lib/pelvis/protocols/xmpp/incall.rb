@@ -14,7 +14,11 @@ module Pelvis
 
         def start
           @agent.send_job_init(job.token, job.scope, job.operation, job.args) do |reply|
-            initialized
+            if reply["type"] == 'error'
+              failed(:message => "Got jabber error", :data => reply)
+            else
+              initialized
+            end
           end
         end
 
