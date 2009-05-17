@@ -1,7 +1,6 @@
 module Pelvis
   class Advertisement
     extend Callbacks
-    include SafeDelegate
 
     callbacks :advertised
 
@@ -11,16 +10,15 @@ module Pelvis
     attr_reader :advertiser, :actor
 
     def start
-      agent.request(:direct, "/security/advertise", options_for_advertisement,
-                    :identities => [agent.herault], :delegate => self)
+      request = agent.request(:direct, "/security/advertise", options_for_advertisement,
+                              :identities => [agent.herault])
+      request.on_completed do |event|
+        advertised
+      end
     end
 
     def options_for_advertisement
       { :identity => agent.identity, :operations => actor.provided_operations, :resources => actor.resources }
-    end
-
-    def completed(event)
-      advertised
     end
 
     def agent
@@ -42,8 +40,8 @@ module Pelvis
     end
     attr_reader :agent, :actors
 
-    def advertise(only=nil)
-      (only || actors).each do |actor|
+    def advertise
+      actors.each do |actor|
         a = Advertisement.start(self, actor)
         pending_advertisements << a
         a.on_advertised { advertisement_complete(a) }
@@ -63,7 +61,6 @@ module Pelvis
     end
 
     def check_complete
-      return unless @all_sent
       return if @completed
 
       if @finished_advertisements >= actors.size
