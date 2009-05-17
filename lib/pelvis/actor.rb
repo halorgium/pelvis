@@ -16,8 +16,10 @@ module Pelvis
       # @op_for_next_method will not be cleared and no error will raise
       # how can we get notified when the class finishes loading... hmmm
       def method_added(m)
-        return unless name = @op_for_next_method
-        @op_for_next_method = nil
+        unless defined?(@op_for_next_method) && @op_for_next_method
+          return
+        end
+        name, @op_for_next_method = @op_for_next_method, nil
         provided_operations << name
         operation_methods[name] << m
       end

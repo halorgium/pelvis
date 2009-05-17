@@ -7,6 +7,7 @@ module Pelvis
 
     def initialize(outcall, identity)
       @outcall, @identity = outcall, identity
+      @initialized, @begun = nil, nil
     end
     attr_reader :outcall, :identity
 

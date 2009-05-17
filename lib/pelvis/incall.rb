@@ -7,6 +7,7 @@ module Pelvis
 
     def initialize(agent, source, job)
       @agent, @source, @job = agent, source, job
+      @started_at, @finished_at = nil, nil
     end
     attr_reader :agent, :source, :job
 

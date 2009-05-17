@@ -37,8 +37,8 @@ module Pelvis
     def initialize(agent, actors)
       @agent, @actors = agent, actors
       @finished_advertisements = 0
+      @completed = false
       advertise
-      check_complete
     end
     attr_reader :agent, :actors
 
@@ -49,6 +49,7 @@ module Pelvis
         a.on_advertised { advertisement_complete(a) }
       end
       @all_sent = true
+      check_complete
     end
 
     def pending_advertisements

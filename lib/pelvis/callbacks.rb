@@ -15,13 +15,17 @@ module Pelvis
             cb = EM::Callback(*a, &b)
             @_on_#{name} ||= []
             @_on_#{name} << cb
-            cb.call(*@_name_data) if @_name == #{name.to_sym.inspect}
+            if defined?(@_name) && @_name == #{name.to_sym.inspect}
+              cb.call(*@_name_data)
+            end
           end
 
           def #{name}(*a)
             @_name = #{name.to_sym.inspect}
             @_name_data = a
-            Array(@_on_#{name}).each { |cb| cb.call(*a) }
+            if defined?(@_on_#{name})
+              Array(@_on_#{name}).each { |cb| cb.call(*a) }
+            end
             yield(*a) if block_given? # A tail run after other callbacks.
           end
         EOC

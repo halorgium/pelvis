@@ -7,6 +7,7 @@ module Pelvis
 
     def initialize(incall, actor_klass, operation)
       @incall, @actor_klass, @operation = incall, actor_klass, operation
+      @started_at, @finished_at = nil, nil
     end
     attr_reader :incall, :actor_klass, :operation, :actor
 

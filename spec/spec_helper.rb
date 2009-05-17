@@ -6,9 +6,9 @@ require 'pelvis/protocols/xmpp'
 class TestDelegate
   include Pelvis::SafeDelegate
 
-  def initialize(stop_on_complete=true)
+  def initialize
+    @completed, @failed = false, false
     @data = []
-    @stop = stop_on_complete
   end
   attr_reader :data
 
@@ -26,7 +26,7 @@ class TestDelegate
 
   def completed(event)
     @completed = event
-    EM.stop # if @stop
+    EM.stop
   end
 
   def failed(error)

@@ -7,6 +7,7 @@ module Pelvis
 
     def initialize(agent, job)
       @agent, @job = agent, job
+      @started_at, @finished_at = nil, nil
     end
     attr_reader :agent, :job
 
@@ -26,7 +27,8 @@ module Pelvis
 
     def discover_with_herault
       identities = []
-      request = @agent.request(:direct, "/security/discover", {:operation => job.operation, :args => job.args},
+      request = @agent.request(:direct, "/security/discover",
+                               {:operation => job.operation, :args => job.args},
                                :identities => [@agent.herault])
       request.on_received do |data|
         identities += data[:identities]
