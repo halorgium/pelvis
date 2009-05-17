@@ -68,26 +68,25 @@ module Pelvis
       @started_at = Time.now
       @orig_resources = [params.delete(:resources)].flatten.compact
       validate_resources
+      run_operation
+    end
 
+    def run_operation
       send(@operation)
     rescue => e
-      if @__ERROR__
-        failed(@__ERROR__)
-      else
-        failed(:code => 500, :message => e.message)
-      end
+      failed(:code => 500, :message => e.message)
     end
 
     def validate_resources
       if self.class.resources
         if @orig_resources.empty?
-          fail :code => 500, :message => "A resource is required for this operation"
+          failed :code => 500, :message => "A resource is required for this operation"
         elsif allowed_resources.empty?
-          fail :code => 404, :message => "Invalid resources #{@orig_resources} for this operation"
+          failed :code => 404, :message => "Invalid resources #{@orig_resources.inspect} for this operation"
         end
       end
     end
-    
+
     def allowed_resources
       @allowed_resources ||= @orig_resources & self.class.resources
     end
@@ -119,11 +118,6 @@ module Pelvis
 
     def params
       job.args
-    end
-
-    def fail(data)
-      @__ERROR__ = data
-      raise
     end
   end
 end

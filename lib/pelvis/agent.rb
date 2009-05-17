@@ -26,17 +26,19 @@ module Pelvis
       job = Job.create(gen_token, scope, operation, args, options, parent || initial_job)
 
       o = Outcall.start(self, job)
-      o.on_received do |data|
-        logger.debug "outcall received: #{data.inspect}"
-        delegate.received(data)
-      end
-      o.on_completed do |event|
-        logger.debug "outcall completed: #{event.inspect}"
-        delegate.completed(event)
-      end
-      o.on_failed do |error|
-        logger.debug "outcall failed: #{error.inspect}"
-        delegate.failed(error)
+      if delegate
+        o.on_received do |data|
+          logger.debug "outcall received: #{data.inspect}"
+          delegate.received(data)
+        end
+        o.on_completed do |event|
+          logger.debug "outcall completed: #{event.inspect}"
+          delegate.completed(event)
+        end
+        o.on_failed do |error|
+          logger.debug "outcall failed: #{error.inspect}"
+          delegate.failed(error)
+        end
       end
       o
     end

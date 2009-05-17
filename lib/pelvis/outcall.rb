@@ -16,6 +16,7 @@ module Pelvis
     end
 
     def discover
+      # TODO: Check scope here
       if identities = @job.options[:identities]
         evoke_to(identities)
       else
@@ -23,26 +24,19 @@ module Pelvis
       end
     end
 
-    class HeraultDiscoverer
-      include SafeDelegate
-
-      def initialize(outcall)
-        @outcall = outcall
-        @identities = []
-      end
-
-      def received(data)
-        @identities += data[:identities]
-      end
-
-      def completed(data)
-        @outcall.evoke_to(@identities)
-      end
-    end
-
     def discover_with_herault
-      @agent.request(:direct, "/security/discover", {:operation => job.operation, :args => job.args},
-                     :identities => [@agent.herault], :delegate => HeraultDiscoverer.new(self))
+      identities = []
+      request = @agent.request(:direct, "/security/discover", {:operation => job.operation, :args => job.args},
+                               :identities => [@agent.herault])
+      request.on_received do |data|
+        identities += data[:identities]
+      end
+      request.on_completed do |event|
+        evoke_to(identities)
+      end
+      request.on_failed do |error|
+        failed("Could not do discovery: #{error}")
+      end
     end
 
     def evoke_to(identities)

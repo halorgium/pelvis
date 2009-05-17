@@ -23,6 +23,7 @@ module Pelvis
 
       def close
         logger.warn "Got disconnected"
+        connect
       end
 
       def receive_data(stanza)
