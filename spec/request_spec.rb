@@ -7,7 +7,8 @@ describe "A request on pelvis" do
   before(:each) do
     @agents = [
       [:herault,  [Herault]],
-      [:foo,      [Simple, Resourced]],
+      [:foo,      [Simple]],
+      [:boo,      [Resourced]],
       [:bar,      []],
     ]
   end
@@ -90,7 +91,7 @@ describe "A request on pelvis" do
     it "should fail when sent to an actor that uses resources" do
       results = TestDelegate.new
       start_agents do |agent|
-        agent.request(:direct, '/w_resource', {:test => 'bla'}, :identities => [identity_for(:foo)], :delegate => results)
+        agent.request(:direct, '/w_resource', {:test => 'bla'}, :identities => [identity_for(:boo)], :delegate => results)
       end
       should_not_be_good(results)
     end

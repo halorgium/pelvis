@@ -53,6 +53,12 @@ class Simple < Pelvis::Actor
     send_data params
     finish
   end
+
+  operation "/w_resource"
+  def bogus
+    send_data :message => "you shouldn't get this because requests to /w_resource should have resources and hence not end up here"
+    finish
+  end
 end
 
 require File.dirname(__FILE__) + '/helpers'

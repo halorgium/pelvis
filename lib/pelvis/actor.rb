@@ -39,10 +39,11 @@ module Pelvis
       end
 
       def operations_for(job)
+        logger.debug "searching #{provided_operations.inspect} for #{job.operation}"
         operations = []
         provided_operations.each do |operation|
           if operation == job.operation
-            logger.debug "returning an operation: #{operation.inspect}"
+            logger.debug "#{self} returning an operation: #{operation.inspect}"
             operation_methods[operation].each do |block|
               operations << [self, block]
             end
@@ -68,25 +69,31 @@ module Pelvis
 
     def start
       @started_at = Time.now
-      @orig_resources = [params.delete(:resources)].flatten.compact
+      @orig_resources = params.delete('resources') || []
       validate_resources
       run_operation
+    rescue => e
+      failed(:code => 500, :message => e.message) unless @failed
     end
 
     def run_operation
       send(@operation)
-    rescue => e
-      failed(:code => 500, :message => e.message)
     end
 
     def validate_resources
+      logger.debug "#{self.class}: resource request #{@orig_resources.inspect} we have #{self.class.resources.inspect}"
       if self.class.resources
         if @orig_resources.empty?
-          failed :code => 500, :message => "A resource is required for this operation"
+          fail :code => 500, :message => "A resource is required for this operation"
         elsif allowed_resources.empty?
-          failed :code => 404, :message => "Invalid resources #{@orig_resources.inspect} for this operation"
+          fail :code => 404, :message => "Invalid resources #{@orig_resources.inspect} for this operation"
         end
+        logger.debug "Allowing #{allowed_resources.inspect}"
+        params[:resources] = allowed_resources
+      elsif !@orig_resources.empty?
+        fail :code => 500, :message => "This operation does not accept resources"
       end
+
     end
 
     def allowed_resources
@@ -120,6 +127,12 @@ module Pelvis
 
     def params
       job.args
+    end
+
+    def fail(args)
+      @failed = true
+      failed(args)
+      raise
     end
   end
 end

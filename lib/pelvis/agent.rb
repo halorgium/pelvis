@@ -77,6 +77,7 @@ module Pelvis
 
     def operations_for(job)
       operations = []
+      logger.debug "#{identity}: actors #{@actors.inspect}"
       @actors.each do |actor|
         operations += actor.operations_for(job)
       end

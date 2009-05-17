@@ -18,7 +18,11 @@ module Pelvis
     end
 
     def options_for_advertisement
-      { :identity => agent.identity, :operations => actor.provided_operations, :resources => actor.resources }
+      opts = { :identity => agent.identity, :operations => {} }
+      actor.provided_operations.each do |op|
+        opts[:operations][op] = actor.resources
+      end
+      opts
     end
 
     def agent
