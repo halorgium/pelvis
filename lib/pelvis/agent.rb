@@ -92,7 +92,16 @@ module Pelvis
     end
 
     def gen_token
-      HMAC::SHA256.hexdigest("#{rand} -- #{Time.now.to_f.to_s}", DateTime.now.ajd.to_f.to_s)
+      values = [
+        rand(0x0010000),
+        rand(0x0010000),
+        rand(0x0010000),
+        rand(0x0010000),
+        rand(0x0010000),
+        rand(0x1000000),
+        rand(0x1000000),
+      ]
+      "%04x%04x%04x%04x%04x%06x%06x" % values
     end
 
     def inspect

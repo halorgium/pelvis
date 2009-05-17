@@ -1,7 +1,6 @@
 gem 'eventmachine', '>= 0.12.7'
 require 'eventmachine'
 require 'json'
-require 'hmac-sha2'
 require 'extlib'
 
 $:.unshift File.dirname(__FILE__)
