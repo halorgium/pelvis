@@ -10,7 +10,7 @@ module Pelvis
 
     def callbacks(*names)
       names.each do |name|
-        class_eval <<-EOC, "callback on #{self} for #{name}"
+        class_eval <<-EOC, "callback on #{self} for #{name}", 1
           def on_#{name}(*a, &b)
             cb = EM::Callback(*a, &b)
             @_on_#{name} ||= []
