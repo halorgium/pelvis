@@ -7,7 +7,7 @@ class Xen < Pelvis::Agent
   operation '/slice/stop'
   def stop
   end
-  
+
   operation '/slice/start'
   def start
   end
