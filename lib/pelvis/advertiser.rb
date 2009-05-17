@@ -18,7 +18,11 @@ module Pelvis
     end
 
     def options_for_advertisement
-      { :identity => agent.identity, :operations => actor.provided_operations, :resources => actor.resources }
+      opts = { :identity => agent.identity, :operations => {} }
+      actor.provided_operations.each do |op|
+        opts[:operations][op] = actor.resources_for(op)
+      end
+      opts
     end
 
     def agent
@@ -30,7 +34,7 @@ module Pelvis
     include Logging
     extend Callbacks
 
-    callbacks :completed_initial
+    callbacks :completed
 
     def initialize(agent, actors)
       @agent, @actors = agent, actors
@@ -46,7 +50,6 @@ module Pelvis
         pending_advertisements << a
         a.on_advertised { advertisement_complete(a) }
       end
-      @all_sent = true
       check_complete
     end
 
@@ -64,7 +67,7 @@ module Pelvis
       return if @completed
 
       if @finished_advertisements >= actors.size
-        completed_initial
+        completed
         @completed = true
       end
     end

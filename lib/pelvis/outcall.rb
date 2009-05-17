@@ -28,7 +28,7 @@ module Pelvis
     def discover_with_herault
       identities = []
       request = @agent.request(:direct, "/security/discover",
-                               {:operation => job.operation, :args => job.args},
+                               {:operation => job.operation, :need_resources => job.args[:resources]},
                                :identities => [@agent.herault])
       request.on_received do |data|
         identities += data[:identities]

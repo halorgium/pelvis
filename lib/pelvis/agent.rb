@@ -54,6 +54,14 @@ module Pelvis
     def actors
       @actors ||= []
     end
+    private :actors
+
+    def add_actor(actor_klass)
+      actors << actor_klass
+      actor_klass.on_resources_changed {
+        Advertiser.new(self, [actor_klass])
+      }
+    end
 
     def advertise
       unless @protocol.advertise?
@@ -63,7 +71,7 @@ module Pelvis
       end
 
       @advertiser = Advertiser.new(self, actors)
-      @advertiser.on_completed_initial { advertised }
+      @advertiser.on_completed { advertised }
     end
 
     def evoke(identity, job)
@@ -77,6 +85,7 @@ module Pelvis
 
     def operations_for(job)
       operations = []
+      logger.debug "#{identity}: actors #{@actors.inspect}"
       @actors.each do |actor|
         operations += actor.operations_for(job)
       end

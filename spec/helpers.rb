@@ -25,6 +25,7 @@ module Pelvis
 
     def start_agents(&block)
       EM.run do
+        Protocols::Local::SET.clear
         agent_connect(@agents, &block)
       end
     end
@@ -34,11 +35,11 @@ module Pelvis
       options = CONFIGS[agent].dup
       connection = Pelvis.connect(PROTOCOL.registered_as, options) do |agent|
         actors.each do |actor|
-          agent.actors << actor
+          agent.add_actor actor
         end
 
         agent.on_advertised do
-          if agents.empty?
+          if actors.empty?
             block.call(agent)
           else
             agent_connect(agents, &block)
