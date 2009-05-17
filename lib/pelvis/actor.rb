@@ -142,5 +142,11 @@ module Pelvis
       failed(args)
       raise
     end
+
+    def fail(args)
+      @failed = true
+      failed(args)
+      raise
+    end
   end
 end
