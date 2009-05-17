@@ -71,7 +71,7 @@ describe "A request on pelvis" do
     it "should only go to an actor that handles that resource and op" do
       results = TestDelegate.new
       start_agents do |agent|
-        agent.request(:direct, '/w_resource', {'resources' => ['/howdy']}, :delegate => results)
+        agent.request(:direct, '/w_resource', {:resources => ['/howdy']}, :delegate => results)
       end
       should_be_good(results, [{'message' => 'howdy'}])
     end

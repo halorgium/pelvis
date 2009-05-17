@@ -55,14 +55,6 @@ module Pelvis
       @actors ||= []
     end
 
-    def add_actor(actor_klass)
-      actors << actor_klass
-    end
-
-    def deliver_to(*args)
-      @protocol.deliver_to(*args)
-    end
-
     def advertise
       unless @protocol.advertise?
         logger.debug "Not advertising"

@@ -60,10 +60,6 @@ module Pelvis
       @finished_at
     end
 
-    def router
-      @agent.router
-    end
-
     def invocations
       @invocations ||= []
     end

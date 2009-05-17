@@ -14,7 +14,6 @@ require 'pelvis/agent'
 require 'pelvis/advertiser'
 require 'pelvis/actor'
 
-require 'pelvis/message'
 require 'pelvis/outcall'
 require 'pelvis/evocation'
 
