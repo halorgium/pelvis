@@ -1,3 +1,5 @@
+require 'delegate'
+
 module Pelvis
   class Agent
     include Logging
@@ -61,6 +63,27 @@ module Pelvis
       actor_klass.on_resources_changed {
         Advertiser.new(self, [actor_klass])
       }
+    end
+
+    class ConfiguredActor < SimpleDelegator
+      def initialize(klass, block)
+        super(klass)
+        @block = block || proc {|actor|}
+      end
+
+      def start(*a)
+        actor = super
+        @block.call(actor)
+        actor
+      end
+
+      def operations_for(job)
+        super.collect {|_klass, op| [self, op]}
+      end
+    end
+
+    def add_actor(klass, &block)
+      actors << ConfiguredActor.new(klass, block)
     end
 
     def advertise
