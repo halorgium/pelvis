@@ -92,7 +92,7 @@ module Pelvis
     end
 
     def advertise
-      unless @protocol.advertise?
+      if !@protocol.advertise? || actors.empty?
         logger.debug "Not advertising"
         advertised
         return
@@ -100,7 +100,8 @@ module Pelvis
 
       # initial advertisement
       a = Advertiser.new(self, actors)
-      a.on_completed { advertised }
+      a.on_succeeded { advertised }
+      a.on_failed { raise "unable to perform advertisement" }
     end
 
     def evoke(identity, job)

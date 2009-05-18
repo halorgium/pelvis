@@ -1,6 +1,18 @@
 module Pelvis
   module Protocols
     class XMPP
+      class Error < Hash
+        def self.create(attrs)
+          a = new
+          a.update(attrs)
+          a
+        end
+
+        def error?
+          true
+        end
+      end
+
       class RemoteAgent
         include Logging
 
@@ -76,7 +88,14 @@ module Pelvis
         def handle_error(stanza, node, token)
           block, original = outbounds.delete(stanza.id)
           if block
-            block.call(stanza)
+            # TODO: this should send the extra stuff too.
+            # EX:
+            # <error code="404" type="wait">
+            # <recipient-unavailable/>
+            # </error>
+            e = Blather::Stanza::Iq.import(stanza).find_first('error')
+            
+            block.call( Error.create(:code => e['code'], :type => e['type'], :message => "Jabber Error") )
           else
             puts "Ignoring error: #{stanza.inspect}"
           end

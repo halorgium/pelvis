@@ -1,8 +1,9 @@
 module Pelvis
   class Advertisement
     extend Callbacks
+    include Logging
 
-    callbacks :advertised
+    callbacks :completed, :failed
 
     def initialize(advertiser, actor)
       @advertiser, @actor = advertiser, actor
@@ -13,7 +14,12 @@ module Pelvis
       request = agent.request(:direct, "/security/advertise", options_for_advertisement,
                               :identities => [agent.herault])
       request.on_completed do |event|
-        advertised
+        logger.debug "Advertisement Successful"
+        completed
+      end
+      request.on_failed do |event|
+        logger.debug "Advertisement Failed"
+        failed
       end
     end
 
@@ -34,7 +40,7 @@ module Pelvis
     include Logging
     extend Callbacks
 
-    callbacks :completed
+    callbacks :succeeded, :failed
 
     def initialize(agent, actors)
       @agent, @actors = agent, actors
@@ -48,13 +54,18 @@ module Pelvis
       actors.each do |actor|
         a = Advertisement.start(self, actor)
         pending_advertisements << a
-        a.on_advertised { advertisement_complete(a) }
+        a.on_completed { advertisement_complete(a) }
+        a.on_failed { failed_advertisements << a; advertisement_complete(a) }
       end
       check_complete
     end
 
     def pending_advertisements
       @pending_advertisements ||= []
+    end
+
+    def failed_advertisements
+      @failed_advertisements ||= []
     end
 
     def advertisement_complete(which)
@@ -67,7 +78,11 @@ module Pelvis
       return if @completed
 
       if @finished_advertisements >= actors.size
-        completed
+        if failed_advertisements.empty?
+          succeeded
+        else
+          failed
+        end
         @completed = true
       end
     end

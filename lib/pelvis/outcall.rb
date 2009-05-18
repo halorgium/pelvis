@@ -7,9 +7,9 @@ module Pelvis
 
     def initialize(agent, job)
       @agent, @job = agent, job
-      @started_at, @finished_at = nil, nil
+      @started_at, @finished_at, @retried_times = nil, nil, 0
     end
-    attr_reader :agent, :job
+    attr_reader :agent, :job, :retried_times
 
     def start
       logger.debug "starting outcall on #{@agent.identity}: #{inspect}"
@@ -72,11 +72,30 @@ module Pelvis
         check_complete
       end
       e.on_failed do |error|
-        logger.debug "outcall failed: #{identity}: #{error.inspect}"
-        evocations[e] = true
-        finish
-        failed(error)
+        logger.warn "Outcall to #{identity} failed: #{error.inspect}"
+        if can_retry?(error)
+          evocations.delete(e)
+          time = 2 ** (@retried_times + 1)
+          logger.debug "Waiting #{time} seconds before retrying"
+          EM.add_timer(time) { @retried_times += 1; evoke(identity) }
+        else
+          evocations[e] = true
+          finish
+          failed(error)
+        end
       end
+    end
+
+    def can_retry?(error)
+      if error[:type] == 'wait' and retried_times < max_retries
+        logger.warn "Can Retry #{max_retries - retried_times} times"
+        return true
+      end
+      false
+    end
+
+    def max_retries
+      5
     end
 
     def check_complete
