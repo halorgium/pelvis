@@ -146,12 +146,6 @@ module Pelvis
       raise
     end
 
-    def fail(args)
-      @failed = true
-      failed(args)
-      raise
-    end
-
     def resources_changed
       self.class.instance_eval "resources_changed"
     end
