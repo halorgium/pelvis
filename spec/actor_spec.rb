@@ -74,12 +74,8 @@ describe "An agent" do
           agent.on_advertised {
             FakeActor.readvertise
             actor.on_readvertising { |a|
-              a.on_succeeded {
-                EM.stop
-              }
-              a.on_failed {
-                EM.stop
-              }
+              a.on_succeeded { EM.stop }
+              a.on_failed { EM.stop }
             }
           }
         end
