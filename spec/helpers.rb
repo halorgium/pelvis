@@ -23,17 +23,27 @@ module Pelvis
       PROTOCOL.new(CONFIGS[name]).identity
     end
 
-    def start_agents(&block)
-      EM.run do
+    def start_em(after=nil)
+      EM.run(nil, after) do
         Protocols::Local::SET.clear
+        yield
+      end
+    end
+
+    def start_agents(&block)
+      start_em do
         agent_connect(@agents, &block)
       end
     end
 
+    def connect(agent, &block)
+      options = CONFIGS[agent].dup
+      Pelvis.connect(PROTOCOL.registered_as, options, &block)
+    end
+
     def agent_connect(agents, &block)
       agent, actors = *agents.shift
-      options = CONFIGS[agent].dup
-      connection = Pelvis.connect(PROTOCOL.registered_as, options) do |agent|
+      connection = connect(agent) do |agent|
         actors.each do |actor|
           agent.add_actor actor
         end
@@ -56,7 +66,13 @@ module Pelvis
       results.should be_completed
       results.should_not be_failed
 
-      results.data.should == exp_response
+      # We need to make sure each expected response is in the dataset
+      # nothing more, order is unpredictable
+      exp_response.each do |data|
+        results.data.should include(data)
+        results.data.delete_at results.data.index(data)
+      end
+      results.data.should be_empty #by now
     end
 
     def should_not_be_good(results)

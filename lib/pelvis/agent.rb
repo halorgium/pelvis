@@ -59,6 +59,9 @@ module Pelvis
     private :actors
 
     class ConfiguredActor < SimpleDelegator
+      extend Callbacks
+      callbacks :readvertising
+
       def initialize(klass, block)
         super(klass)
         @block = block || proc {|actor|}
@@ -73,22 +76,28 @@ module Pelvis
       def operations_for(job)
         super.collect {|_klass, op| [self, op]}
       end
+
+      def readvertised_with(a)
+        readvertising(a)
+      end
     end
 
     def add_actor(klass, &block)
-      if block_given?
-        actors << ConfiguredActor.new(klass, block)
-      else
-        actors << klass
-      end
+      actors << ConfiguredActor.new(klass, block)
       it = actors.last
       it.added_to_agent(self)
       it.on_resources_changed {
         logger.debug "got resources changed for #{it}, readvertising"
-        Advertiser.new(self, [it]).on_completed {
+        a = Advertiser.new(self, [it])
+        a.on_succeeded {
           logger.debug "readvertisement successful"
         }
+        a.on_failed {
+          logger.debug "readvertisement failed"
+        }
+        it.readvertised_with(a)
       }
+      it
     end
 
     def advertise
