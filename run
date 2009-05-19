@@ -12,7 +12,7 @@ require File.dirname(__FILE__) + '/examples/delegates/debugger'
 
 def connect_herault
   Pelvis.connect(:local, :identity => "herault", :advertise => false) do |agent|
-    agent.actors << Herault
+    agent.add_actor Herault
     agent.on_advertised do
       puts "herault is ready"
       connect_foo
@@ -22,7 +22,7 @@ end
 
 def connect_foo
   Pelvis.connect(:local, :identity => "foo") do |agent|
-    agent.actors << Randomz
+    agent.add_actor Randomz
     agent.on_advertised do
       puts "foo is ready"
       connect_bar

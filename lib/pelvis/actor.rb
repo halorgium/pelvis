@@ -59,6 +59,9 @@ module Pelvis
       def resources_for(op)
         nil
       end
+
+      def added_to_agent(agent)
+      end
     end
 
     # TODO: Enable config and deployment resources
@@ -148,5 +151,10 @@ module Pelvis
       failed(args)
       raise
     end
+
+    def resources_changed
+      self.class.instance_eval "resources_changed"
+    end
+
   end
 end

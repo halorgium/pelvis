@@ -1,12 +1,25 @@
 class Randomz < Pelvis::Actor
-  operation "/do/random"
-  def run
-    send_wait(rand(10))
+  def self.resources_for(op)
+    case op
+      when '/never/works'
+        ['bla']
+      end
+  end
+
+  def self.added_to_agent(agent)
+    EM.add_timer(20) {
+      resources_changed
+    }
   end
 
   operation "/never/works"
   def broken
     fail :message => "I am hopelessly broken"
+  end
+
+  operation "/do/random"
+  def run
+    send_wait(rand(10))
   end
 
   def send_wait(number)

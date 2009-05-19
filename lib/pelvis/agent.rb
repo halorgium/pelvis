@@ -58,13 +58,6 @@ module Pelvis
     end
     private :actors
 
-    def add_actor(actor_klass)
-      actors << actor_klass
-      actor_klass.on_resources_changed {
-        Advertiser.new(self, [actor_klass])
-      }
-    end
-
     class ConfiguredActor < SimpleDelegator
       def initialize(klass, block)
         super(klass)
@@ -83,7 +76,19 @@ module Pelvis
     end
 
     def add_actor(klass, &block)
-      actors << ConfiguredActor.new(klass, block)
+      if block_given?
+        actors << ConfiguredActor.new(klass, block)
+      else
+        actors << klass
+      end
+      it = actors.last
+      it.added_to_agent(self)
+      it.on_resources_changed {
+        logger.debug "got resources changed for #{it}, readvertising"
+        Advertiser.new(self, [it]).on_completed {
+          logger.debug "readvertisement successful"
+        }
+      }
     end
 
     def advertise
@@ -93,8 +98,9 @@ module Pelvis
         return
       end
 
-      @advertiser = Advertiser.new(self, actors)
-      @advertiser.on_completed { advertised }
+      # initial advertisement
+      a = Advertiser.new(self, actors)
+      a.on_completed { advertised }
     end
 
     def evoke(identity, job)

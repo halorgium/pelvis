@@ -18,7 +18,7 @@ end
 
 def connect_herault
   Pelvis.connect(:xmpp, :jid => "herault@localhost/agent", :password => "testing", :advertise => false) do |agent|
-    agent.actors << Herault
+    agent.add_actor Herault
     agent.on_advertised do
       puts "herault is ready"
       connect_chained
@@ -28,8 +28,8 @@ end
 
 def connect_chained
   Pelvis.connect(:xmpp, :jid => "dummy@localhost/agent", :password => "testing") do |agent|
-    agent.actors << Randomz
-    agent.actors << Chained
+    agent.add_actor Randomz
+    agent.add_actor Chained
 
     agent.on_advertised do
       puts "chained is ready"
@@ -40,7 +40,7 @@ end
 
 def connect_inner
   Pelvis.connect(:xmpp, :jid => "dummy2@localhost/agent", :password => "testing") do |agent|
-    agent.actors << Inner
+    agent.add_actor Inner
 
     agent.on_advertised do
       puts "inner is ready"
