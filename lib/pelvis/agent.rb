@@ -17,7 +17,7 @@ module Pelvis
     end
 
     def initial_job
-      @initial_job ||= Job.create(gen_token, :init, "/init")
+      @initial_job ||= Job.create(Util.gen_token, :init, "/init")
     end
 
     def request(scope, operation, args, options, parent = nil)
@@ -25,7 +25,7 @@ module Pelvis
       # serialize/unserialize attrs to wipe out symbols etc, makes locally dispatched same as remote
       args = JSON.parse(args.to_json).to_mash
       delegate = options.delete(:delegate)
-      job = Job.create(gen_token, scope, operation, args, options, parent || initial_job)
+      job = Job.create(Util.gen_token, scope, operation, args, options, parent || initial_job)
 
       o = Outcall.start(self, job)
       if delegate
@@ -120,19 +120,6 @@ module Pelvis
         operations += actor.operations_for(job)
       end
       operations
-    end
-
-    def gen_token
-      values = [
-        rand(0x0010000),
-        rand(0x0010000),
-        rand(0x0010000),
-        rand(0x0010000),
-        rand(0x0010000),
-        rand(0x1000000),
-        rand(0x1000000),
-      ]
-      "%04x%04x%04x%04x%04x%06x%06x" % values
     end
 
     def inspect
