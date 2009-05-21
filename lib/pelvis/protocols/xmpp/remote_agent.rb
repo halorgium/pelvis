@@ -94,7 +94,7 @@ module Pelvis
             # <recipient-unavailable/>
             # </error>
             e = Blather::Stanza::Iq.import(stanza).find_first('error')
-            
+
             block.call( Error.create(:code => e['code'], :type => e['type'], :message => "Jabber Error") )
           else
             puts "Ignoring error: #{stanza.inspect}"
