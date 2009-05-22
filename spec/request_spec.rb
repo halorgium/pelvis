@@ -29,6 +29,14 @@ describe "A request on pelvis" do
     should_be_good(results)
   end
 
+  it "errors when no identities are found for the op" do
+    results = TestDelegate.new
+    start_agents do |agent|
+      agent.request(:all, "/blabiddy", {:foo => 'bar'}, :delegate => results)
+    end
+    should_not_be_good(results)
+  end
+
   it "errors when the remote end is down" do
     #pending "This should call into the 'failed' callback"
 

@@ -34,7 +34,11 @@ module Pelvis
         identities += data[:identities]
       end
       request.on_completed do |event|
-        evoke_to(identities)
+        if identities.empty?
+          failed("No identities found to satisfy #{job.operation} with resources #{job.args[:resources]}")
+        else
+          evoke_to(identities)
+        end
       end
       request.on_failed do |error|
         failed("Could not do discovery: #{error}")
@@ -106,7 +110,7 @@ module Pelvis
     def check_begun
       return unless @all_sent
       return if finished?
-      if evocations.values.none? {|s| s == :created}
+      if evocations.values.any? {|s| s != :created}
         logger.debug "All evocations are begun"
         evoked
       end
