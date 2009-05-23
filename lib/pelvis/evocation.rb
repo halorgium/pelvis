@@ -67,6 +67,11 @@ module Pelvis
       finished? ? @finished_at - @started_at : Time.now - @started_at
     end
 
+    def put(data)
+      logger.debug "evocation put: #{data.inspect}"
+      @incall.put(data)
+    end
+
     def inspect
       "#<#{self.class} outcall=#{@outcall.inspect} identity=#{@identity.inspect}>"
     end

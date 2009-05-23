@@ -128,6 +128,10 @@ module Pelvis
       @invocation.request(*args)
     end
 
+    def recv_data(&block)
+      @invocation.on_sent(&block)
+    end
+
     def send_data(data)
       received(data)
     end

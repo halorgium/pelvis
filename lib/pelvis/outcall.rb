@@ -120,6 +120,13 @@ module Pelvis
       @evocations ||= {}
     end
 
+    def put(data)
+      logger.debug "outcall put: #{data.inspect}"
+      evocations.each do |e, finished|
+        e.put(data) unless finished
+      end
+    end
+
     def inspect
       "#<#{self.class} agent=#{@agent.inspect} " \
         "token=#{@job.token.inspect} operation=#{@job.operation.inspect} " \

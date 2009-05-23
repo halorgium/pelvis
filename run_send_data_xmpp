@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+
+require File.dirname(__FILE__) + '/lib/pelvis'
+require File.dirname(__FILE__) + '/lib/pelvis/protocols/xmpp'
+
+require File.dirname(__FILE__) + '/examples/actors/herault'
+require File.dirname(__FILE__) + '/examples/actors/echo'
+
+def connect_herault
+  Pelvis.connect(:xmpp, :jid => 'herault@localhost/agent', :password => 'testing', :advertise => false) do |agent|
+    agent.add_actor Herault
+    agent.on_advertised do
+      puts "herault is ready"
+      connect_echo
+    end
+  end
+end
+
+def connect_echo
+  Pelvis.connect(:xmpp, :jid => 'dummy@localhost/agent', :password => 'testing') do |agent|
+    agent.add_actor Echo
+    agent.on_advertised do
+      puts "echo is ready"
+      connect_console
+    end
+  end
+end
+
+def connect_console
+  Pelvis.connect(:xmpp, :jid => 'admin@localhost/agent', :password => 'testing') do |agent|
+    agent.on_advertised do
+      puts "console is ready"
+
+      r = agent.request(:all, "/do/echo", {}, :identities => ["dummy@localhost/agent"])
+      r.on_received do |data|
+        puts data[:output]
+      end
+      r.on_completed do |event|
+        puts event
+        EM::stop_event_loop
+      end
+
+      prompt_for_data do |data|
+        puts "SENDING: #{data}"
+        r.put :input => data
+      end
+    end
+  end
+end
+
+def prompt_for_data(&block)
+  op = proc { $stdin.gets.chomp }
+  cb = proc {|data|
+    if "LQUIT" === data.chomp.upcase
+      EM::stop_event_loop
+    else
+      block.call(data) unless block.nil?
+      EM::defer(op, cb)
+    end
+  }
+  EM::defer(op, cb)
+end
+
+if ENV["DEBUGGER"]
+  Pelvis.logger.level = Logger::DEBUG
+end
+
+EM.run do
+  connect_herault
+end

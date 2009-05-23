@@ -67,5 +67,10 @@ module Pelvis
     def operations
       @agent.operations_for(job)
     end
+
+    def put(data)
+      logger.debug "incall put: #{data.inspect}"
+      invocations.each {|i| i.put(data) }
+    end
   end
 end

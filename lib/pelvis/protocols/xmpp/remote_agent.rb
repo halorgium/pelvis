@@ -30,6 +30,7 @@ module Pelvis
           job = Job.create(token, node["scope"], node["operation"], args, {})
           logger.debug "Job starting: #{job.inspect}"
           incall = @protocol.agent.invoke(@identity, job)
+          incalls[job.token] = incall
           incall.on_initialized do
             send_result(stanza)
           end
@@ -61,7 +62,12 @@ module Pelvis
 
         def handle_job_data(stanza, node, token)
           data = JSON.parse(Base64.decode64(node.content)).to_mash
-          incall_for(token).receive(data)
+          incall = incall_for(token)
+          if Pelvis::Incall === incall
+            incall.put(data)
+          else
+            incall.receive(data)
+          end
           send_result(stanza)
         end
 

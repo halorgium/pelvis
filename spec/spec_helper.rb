@@ -82,6 +82,16 @@ class Simple < Pelvis::Actor
     send_data params
     finish
   end
+
+  operation "/echo_data"
+  def echo_data
+    send_data 'data' => 'prompt'
+    recv_data do |data|
+      logger.debug "echo_data recv_data: #{data.inspect}"
+      send_data data
+      finish
+    end
+  end
 end
 
 require File.dirname(__FILE__) + '/helpers'

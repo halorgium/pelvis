@@ -3,7 +3,7 @@ module Pelvis
     include Logging
     extend Callbacks
 
-    callbacks :received, :completed, :failed
+    callbacks :received, :completed, :failed, :sent
 
     def initialize(incall, actor_klass, operation)
       @incall, @actor_klass, @operation = incall, actor_klass, operation
@@ -49,6 +49,11 @@ module Pelvis
 
     def finished?
       @finished_at
+    end
+
+    def put(data)
+      logger.debug "invocation put: #{data.inspect}"
+      sent(data)
     end
   end
 end

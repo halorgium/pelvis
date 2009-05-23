@@ -43,6 +43,12 @@ module Pelvis
         def fail(error)
           failed(error)
         end
+
+        def put(data)
+          @agent.send_job_data(job.token, data) do |reply|
+            # TODO: what to do with errors here?
+          end
+        end
       end
     end
   end

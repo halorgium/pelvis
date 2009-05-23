@@ -106,4 +106,20 @@ describe "A request on pelvis" do
     end
   end
 
+  describe "that sends data" do
+    it "should work" do
+      results = TestDelegate.new
+      start_agents do |agent|
+        r = agent.request(:direct, '/echo_data', {}, :identities => [identity_for(:foo)], :delegate => results)
+        # When this is all running locally, we need to do a little dance so we
+        # don't stall the reactor. The actor will send some data that we can
+        # then respond to.
+        r.on_received do |data|
+          r.put 'input' => 'foo' if {'data' => 'prompt'} === data
+        end
+      end
+      should_be_good(results, [{'data' => 'prompt'}, {'input' => 'foo'}])
+    end
+  end
+
 end
