@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+
+require 'rubygems'
+
+require File.dirname(__FILE__) + '/lib/pelvis'
+require 'pelvis/protocols/xmpp'
+
+require File.dirname(__FILE__) + '/examples/actors/herault'
+require File.dirname(__FILE__) + '/examples/actors/randomz'
+
+if ENV["DEBUGGER"]
+  Pelvis.logger.level = Logger::DEBUG
+  Blather::LOG.level = Logger::DEBUG
+end
+
+EM.run do
+  Pelvis.connect(:xmpp, :jid => "herault@localhost/agent", :password => "testing", :advertise => false) do |agent|
+    agent.add_actor Herault
+    agent.on_advertised { puts "herault is ready" }
+  end
+end
