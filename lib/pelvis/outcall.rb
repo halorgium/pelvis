@@ -61,10 +61,11 @@ module Pelvis
 
     def evoke(identity)
       e = Evocation.start(self, identity)
-      evocations[e] = false
+      evocations[e] = :created
       e.on_begun do
         logger.debug "outcall begun: #{identity}"
-        evoked
+        evocations[e] = :begun
+        check_begun
       end
       e.on_received do |data|
         logger.debug "outcall received: #{identity}: #{data.inspect}"
@@ -72,7 +73,7 @@ module Pelvis
       end
       e.on_completed do |event|
         logger.debug "outcall completed: #{identity}: #{event.inspect}"
-        evocations[e] = true
+        evocations[e] = :finished
         check_complete
       end
       e.on_failed do |error|
@@ -83,7 +84,7 @@ module Pelvis
           logger.debug "Waiting #{time} seconds before retrying"
           EM.add_timer(time) { @retried_times += 1; evoke(identity) }
         else
-          evocations[e] = true
+          evocations[e] = :finished
           finish
           failed(error)
         end
@@ -102,10 +103,19 @@ module Pelvis
       5
     end
 
+    def check_begun
+      return unless @all_sent
+      return if finished?
+      if evocations.values.none? {|s| s == :created}
+        logger.debug "All evocations are begun"
+        evoked
+      end
+    end
+
     def check_complete
       return unless @all_sent
       return if finished?
-      if evocations.values.all?
+      if evocations.values.all? {|s| s == :finished}
         logger.debug "All evocations are finished"
         finish
         completed "Done at #{Time.now}"
@@ -126,8 +136,10 @@ module Pelvis
 
     def put(data)
       logger.debug "outcall put: #{data.inspect}"
-      evocations.each do |e, finished|
-        e.put(data) unless finished
+      evocations.each do |e, state|
+        # TODO: Probably should create a timer if the state is :started
+        # TODO: Probably should error somehow if the state is :finished
+        e.put(data) if state == :begun
       end
     end
 
