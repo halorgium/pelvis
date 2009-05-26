@@ -85,7 +85,6 @@ class Simple < Pelvis::Actor
 
   operation "/echo_data"
   def echo_data
-    send_data 'data' => 'prompt'
     recv_data do |data|
       logger.debug "echo_data recv_data: #{data.inspect}"
       send_data data
