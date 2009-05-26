@@ -3,7 +3,7 @@ module Pelvis
     include Logging
     extend Callbacks
 
-    callbacks :received, :completed, :failed
+    callbacks :received, :completed, :failed, :begun
 
     def initialize(outcall, identity)
       @outcall, @identity = outcall, identity
@@ -44,6 +44,7 @@ module Pelvis
     def reply
       if @initialized && @begun
         @incall.begin
+        begun
       end
     end
 

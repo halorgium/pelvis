@@ -3,7 +3,7 @@ module Pelvis
     include Logging
     extend Callbacks
 
-    callbacks :received, :completed, :failed
+    callbacks :received, :completed, :failed, :evoked
 
     def initialize(agent, job)
       @agent, @job = agent, job
@@ -62,6 +62,10 @@ module Pelvis
     def evoke(identity)
       e = Evocation.start(self, identity)
       evocations[e] = false
+      e.on_begun do
+        logger.debug "outcall begun: #{identity}"
+        evoked
+      end
       e.on_received do |data|
         logger.debug "outcall received: #{identity}: #{data.inspect}"
         received(data)
