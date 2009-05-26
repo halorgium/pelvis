@@ -12,6 +12,7 @@ module Pelvis
     attr_reader :incall, :actor_klass, :operation, :actor
 
     def start
+      @started_at = Time.now
       logger.debug "starting invocation: #{@actor_klass.inspect}, #{@operation.inspect}"
       actor = @actor_klass.start(self, @operation)
       actor.on_received do |data|
@@ -29,6 +30,10 @@ module Pelvis
         finish
         failed(error)
       end
+    end
+
+    def started?
+      @started_at
     end
 
     def agent
@@ -52,8 +57,13 @@ module Pelvis
     end
 
     def put(data)
-      logger.debug "invocation put: #{data.inspect}"
-      sent(data)
+      t = EM::PeriodicTimer.new(0.015) do
+        if started?
+          logger.debug "invocation put: #{data.inspect}"
+          sent(data)
+          t.cancel
+        end
+      end
     end
   end
 end
