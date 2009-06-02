@@ -5,6 +5,7 @@ require 'extlib'
 
 $:.unshift File.dirname(__FILE__)
 
+require 'pelvis/version'
 require 'pelvis/util'
 
 require 'pelvis/logging'
