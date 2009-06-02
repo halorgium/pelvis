@@ -1,6 +1,7 @@
 require 'blather'
 require 'json'
 require 'base64'
+require 'resolv'
 
 module Pelvis
   module Protocols
@@ -9,7 +10,30 @@ module Pelvis
 
       def connect
         logger.debug "connecting using #{self.class}: #{options.inspect}"
-        @stream = Blather::Stream::Client.start(self, jid, options[:password])
+
+        # Graciously stolen from xmpp4r
+        srv = []
+        Resolv::DNS.open { |dns|
+          # If ruby version is too old and SRV is unknown, this will raise a NameError
+          # which is caught below
+          logger.debug "RESOLVING:\n_xmpp-client._tcp.#{jid.domain} (SRV)"
+          srv = dns.getresources("_xmpp-client._tcp.#{jid.domain}", Resolv::DNS::Resource::IN::SRV)
+        }
+        # Sort SRV records: lowest priority first, highest weight first
+        srv.sort! { |a,b| (a.priority != b.priority) ? (a.priority <=> b.priority) : (b.weight <=> a.weight) }
+
+        srv.each { |record|
+          begin
+            logger.debug "Attempting connection to #{record.target}:#{record.port}"
+            @stream = Blather::Stream::Client.start(self, jid, options[:password], record.target.to_s, record.port)
+            # Success
+            return self
+          rescue
+            # Try next SRV record
+          end
+        }
+      rescue NameError
+        logger::debug "Resolv::DNS does not support SRV records. Please upgrade to ruby-1.8.3 or later!"
       end
       attr_reader :stream
 
