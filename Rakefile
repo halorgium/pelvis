@@ -16,11 +16,12 @@ require File.dirname(__FILE__) + '/lib/pelvis/version'
   s.summary   = 'A vertebra-like framework'
   s.description = s.summary
 
-  s.require_path = 'lib'
-  s.files = %w(Rakefile) + Dir.glob("{lib,spec}/**/*")
+  s.require_paths = ['lib','examples']
+  s.files = %w(Rakefile) + Dir.glob("{lib,spec,examples}/**/*")
   
   s.add_dependency 'rake'
   s.add_dependency 'extlib'
+  s.add_dependency 'json'
   s.add_dependency 'eventmachine', '>= 0.12.7'
   s.add_dependency 'blather', '>= 0.3.4'
   
