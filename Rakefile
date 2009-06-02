@@ -19,6 +19,7 @@ require File.dirname(__FILE__) + '/lib/pelvis/version'
   s.require_path = 'lib'
   s.files = %w(Rakefile) + Dir.glob("{lib,spec}/**/*")
   
+  s.add_dependency 'rake'
   s.add_dependency 'eventmachine', '>= 0.12.7'
   s.add_dependency 'blather', '>= 0.3.4'
   
