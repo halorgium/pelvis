@@ -6,6 +6,8 @@ require 'resolv'
 module Pelvis
   module Protocols
     class XMPP < Protocol
+      class ConnectionError < RuntimeError; end
+
       register :xmpp
 
       def connect
@@ -50,19 +52,20 @@ module Pelvis
       end
 
       def unbind
-        logger.warn "Got disconnected"
+        logger.warn "Got disconnected (unbind)"
+        failed(ConnectionError.new("got disconnected"))
       end
 
       def close
-        logger.warn "Got disconnected"
+        logger.warn "Got disconnected (close)"
         connect
       end
 
       def receive_data(stanza)
         logger.debug "got a stanza for #{identity}:\n#{stanza.inspect}"
 
-        if stanza.is_a?(Blather::BlatherError)
-          failed stanza.message
+        if stanza.is_a?(Blather::BlatherError) || stanza.is_a?(Blather::SASLError)
+          failed stanza
           return
         end
 

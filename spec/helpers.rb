@@ -57,7 +57,9 @@ module Pelvis
         end
       end
       connection.on_failed do |error|
-        raise "Error with #{connection.inspect}: #{error.inspect}"
+        unless error.kind_of?(Pelvis::Protocols::XMPP::ConnectionError)
+          raise "Error with #{connection.inspect}: #{error.inspect}"
+        end
       end
     end
 

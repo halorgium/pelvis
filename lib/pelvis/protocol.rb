@@ -21,7 +21,7 @@ module Pelvis
         spawn
       end
       on_failed do |error|
-        logger.error "Failed to connect: #{error}"
+        logger.error "Connection Error: #{error}"
       end
     end
     attr_reader :options, :agent
