@@ -64,13 +64,30 @@ module Pelvis
       def receive_data(stanza)
         logger.debug "got a stanza for #{identity}:\n#{stanza.inspect}"
 
-        if stanza.is_a?(Blather::BlatherError) || stanza.is_a?(Blather::SASLError)
-          failed stanza
-          return
+        case stanza
+          when Blather::BlatherError, Blather::SASLError
+            failed stanza
+            return
+#          when Blather::Presence::Status
+#          when Blather::Presence::Subscription
+#            if stanza.subscribe?
+#              logger.debug "Got subscription request from #{stanza.from}"
+#              val = if identity == herault
+#                      logger.warn "Approving subscription request from #{stanza.from}"
+#                      stanza.approve!
+#                    else
+#                      logger.warn "Refusing subscription request from #{stanza.from}"
+#                      stanza.refuse!
+#                    end
+#              @stream.send val
+#            end
+          else
+            process_stanza stanza
         end
+      end
 
-        from = stanza["from"]
-        remote_agent = agent_for(from)
+      def process_stanza(stanza)
+        remote_agent = agent_for(stanza['from'])
         node = stanza.find("job").first
         token = node["token"]
 

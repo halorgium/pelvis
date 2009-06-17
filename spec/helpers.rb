@@ -26,6 +26,7 @@ module Pelvis
     def start_em(after=nil)
       EM.run(nil, after) do
         Protocols::Local::SET.clear
+        Protocols::Local::PRESENCE_HANDLERS.clear
         yield
       end
     end
@@ -43,6 +44,7 @@ module Pelvis
 
     def agent_connect(agents, &block)
       agent, actors = *agents.shift
+      actors ||= []
       connection = connect(agent) do |agent|
         actors.each do |actor|
           agent.add_actor actor

@@ -62,9 +62,15 @@ module Pelvis
       extend Callbacks
       callbacks :readvertising
 
-      def initialize(klass, block)
+      def initialize(agent, klass, block)
         super(klass)
         @block = block || proc {|actor|}
+        set_agent agent
+        post_init
+      end
+
+      def post_init
+        super
       end
 
       def start(*a)
@@ -83,9 +89,8 @@ module Pelvis
     end
 
     def add_actor(klass, &block)
-      actors << ConfiguredActor.new(klass, block)
+      actors << ConfiguredActor.new(self, klass, block)
       it = actors.last
-      it.added_to_agent(self)
       it.on_resources_changed {
         logger.debug "got resources changed for #{it}, readvertising"
         a = Advertiser.new(self, [it])

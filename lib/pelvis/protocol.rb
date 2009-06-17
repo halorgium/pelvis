@@ -42,6 +42,19 @@ module Pelvis
       options[:advertise]
     end
 
+    def presence_handlers
+      @presence_handlers ||= {}
+    end
+
+    def subscribe_presence(identity, &block)
+      presence_handlers[identity] = block
+      handle_subscribe_presence(identity)
+    end
+
+    def handle_subscribe_presence(ident)
+      raise "Implement #handle_subscribe_presence on #{self.class}"
+    end
+
     def connect
       raise "Implement #connect on #{self.class}"
     end

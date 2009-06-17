@@ -6,9 +6,16 @@ module Pelvis
       register :local
 
       SET = []
+      PRESENCE_HANDLERS = {}
 
       def connect
-        logger.debug "connecting using #{self.class}: identity=#{identity.inspect}"
+        logger.debug "connecting using #{self}: identity=#{identity.inspect}"
+
+        if presence_handlers[identity]
+          p presence_handlers[identity]
+          presence_handlers[identity].send(:call)
+        end
+
         on_spawned do |agent|
           SET << agent
         end
@@ -35,6 +42,14 @@ module Pelvis
         def start
           failed(:code => 404, :message => "Could not find an agent found #{@identity.inspect}")
         end
+      end
+
+      def presence_handlers
+        PRESENCE_HANDLERS
+      end
+
+      def handle_subscribe_presence(ident)
+        # nothing to do
       end
 
       def agent_for(identity)

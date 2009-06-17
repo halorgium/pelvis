@@ -10,6 +10,15 @@ module Pelvis
       extend Callbacks
 
       callbacks :resources_changed
+      attr_reader :agent
+
+      def post_init
+        #override me
+      end
+
+      def set_agent(agent)
+        @agent = agent
+      end
 
       def operation(name, options={})
         options[:name] = name
@@ -58,9 +67,6 @@ module Pelvis
 
       def resources_for(op)
         nil
-      end
-
-      def added_to_agent(agent)
       end
     end
 
