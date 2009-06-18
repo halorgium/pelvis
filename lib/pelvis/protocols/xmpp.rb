@@ -14,40 +14,13 @@ module Pelvis
         logger.debug "connecting using #{self.class}: #{options.inspect}"
         host = jid.domain if jid.domain == 'localhost'
 
-        # Graciously stolen from xmpp4r
-        if host.nil?
-          begin
-            srv = []
-            Resolv::DNS.open { |dns|
-              # If ruby version is too old and SRV is unknown, this will raise a NameError
-              # which is caught below
-              logger.debug "RESOLVING:\n_xmpp-client._tcp.#{jid.domain} (SRV)"
-              srv = dns.getresources("_xmpp-client._tcp.#{jid.domain}", Resolv::DNS::Resource::IN::SRV)
-            }
-            # Sort SRV records: lowest priority first, highest weight first
-            srv.sort! { |a,b| (a.priority != b.priority) ? (a.priority <=> b.priority) : (b.weight <=> a.weight) }
-
-            srv.each { |record|
-              begin
-                logger.debug "Attempting connection to #{record.target}:#{record.port}"
-                @stream = Blather::Stream::Client.start(self, jid, options[:password], record.target.to_s, record.port)
-                # Success
-                return self
-              rescue
-                # Try next SRV record
-              end
-            }
-          rescue NameError
-            logger::debug "Resolv::DNS does not support SRV records. Please upgrade to ruby-1.8.3 or later!"
-          end
-        end
-
-        @stream = Blather::Stream::Client.start(self, jid, options[:password])
+        @stream = Blather::Stream::Client.start(self, jid, options[:password],host)
         self
       end
       attr_reader :stream
 
       def post_init
+        stream.send Blather::Stanza::Presence::Status.new
         connected
       end
 
@@ -68,19 +41,25 @@ module Pelvis
           when Blather::BlatherError, Blather::SASLError
             failed stanza
             return
-#          when Blather::Presence::Status
-#          when Blather::Presence::Subscription
-#            if stanza.subscribe?
-#              logger.debug "Got subscription request from #{stanza.from}"
-#              val = if identity == herault
-#                      logger.warn "Approving subscription request from #{stanza.from}"
-#                      stanza.approve!
-#                    else
-#                      logger.warn "Refusing subscription request from #{stanza.from}"
-#                      stanza.refuse!
-#                    end
-#              @stream.send val
-#            end
+          when Blather::Stanza::Iq::Roster
+            # ignore
+          when Blather::Stanza::Presence::Status
+            logger.debug "Got presence announcement from #{stanza.from}"
+            if presence_handlers[stanza.from.to_s]
+              presence_handlers[stanza.from.to_s].call stanza.from, stanza.state
+            end
+          when Blather::Stanza::Presence::Subscription
+            if stanza.subscribe?
+              logger.debug "Got subscription request from #{stanza.from}"
+              val = if stanza.from.stripped == herault_jid.stripped
+                      logger.warn "Approving subscription request from #{stanza.from}"
+                      stanza.approve!
+                    else
+                      logger.warn "Refusing subscription request from #{stanza.from}"
+                      stanza.refuse!
+                    end
+              stream.send val
+            end
           else
             process_stanza stanza
         end
@@ -133,6 +112,15 @@ module Pelvis
 
       def herault
         "herault@#{jid.domain}/agent"
+      end
+
+      def herault_jid
+        @herault_jid = Blather::JID.new(herault)
+      end
+
+      def handle_subscribe_presence(ident)
+        logger.debug "#{identity} Subscribing to presence announcements for #{ident}"
+        stream.send Blather::Stanza::Presence::Subscription.new(ident, :subscribe)
       end
     end
   end

@@ -23,7 +23,7 @@ require File.dirname(__FILE__) + '/lib/pelvis/version'
   s.add_dependency 'extlib'
   s.add_dependency 'json'
   s.add_dependency 'eventmachine', '>= 0.12.7'
-  s.add_dependency 'blather', '>= 0.3.4'
+  s.add_dependency 'blather', '>= 0.4.2'
   
   # this is because rubygems is lame
   s.add_dependency('mime-types', '>= 1.16')

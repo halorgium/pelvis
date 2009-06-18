@@ -8,14 +8,17 @@ describe "A protocol" do
 
   describe "#subscribe_presence" do
     it "should call the block when the specified identity advertises" do
-      block = Proc.new { @called_me = true }
+      block = Proc.new { |id, status|
+        id.should == identity_for(:foo)
+        status.should == :available
+        EM.stop
+      }
 
-      @agents = [[:herault, [DummyActor]], [:foo]]
+      @agents = [[:herault]]
       start_agents { |agent|
-        agent.protocol.subscribe_presence(identity_for(:bar), &block)
-        connect(:bar) {
-          @called_me.should == true
-          EM.stop
+        agent.protocol.subscribe_presence(identity_for(:foo), &block)
+        connect(:foo) {
+          EM.add_timer(1) { raise "Didn't get subscription advertisement" }
         }
       }
     end

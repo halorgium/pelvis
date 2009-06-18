@@ -14,6 +14,7 @@ module Pelvis
       end
 
       class RemoteAgent
+        include Nokogiri
         include Logging
 
         def initialize(protocol, identity)
@@ -144,27 +145,27 @@ module Pelvis
 
         def send_result(stanza)
           reply = stanza.reply
-          reply.attributes[:type] = :result
+          reply[:type] = :result
           @protocol.stream.send(reply)
         end
 
         def send_error(stanza, error, &block)
           reply = stanza.reply
-          reply.attributes[:type] = :error
+          reply[:type] = :error
           node = XML::Node.new("error")
-          node.attributes[:code] = 500
+          node[:code] = 500
           node << XML::Node.new_cdata(error) if error
           reply << node
           @protocol.stream.send(reply)
         end
 
         def send_stanza(iq_type, type, content, attributes, &block)
-          node = XML::Node.new("job")
-          node.attributes[:type] = type
+          node = XML::Node.new("job",XML::Document.new)
+          node[:type] = type
           attributes.each do |key,value|
-            node.attributes[key] = value
+            node[key] = value
           end
-          node << XML::Node.new_cdata(Base64.encode64(content.to_json)) if content
+          node << XML::CDATA.new(node.document, Base64.encode64(content.to_json)) if content
           iq = Blather::Stanza::Iq.new(iq_type, @identity)
           iq << node
           outbounds[iq.id] = [block, iq]

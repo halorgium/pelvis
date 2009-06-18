@@ -31,8 +31,8 @@ module Pelvis
       end
     end
 
-    def start_agents(&block)
-      start_em do
+    def start_agents(after=nil, &block)
+      start_em(after) do
         agent_connect(@agents, &block)
       end
     end

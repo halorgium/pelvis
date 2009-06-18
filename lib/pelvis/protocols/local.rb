@@ -12,8 +12,7 @@ module Pelvis
         logger.debug "connecting using #{self}: identity=#{identity.inspect}"
 
         if presence_handlers[identity]
-          p presence_handlers[identity]
-          presence_handlers[identity].send(:call)
+          presence_handlers[identity].call(identity, :available)
         end
 
         on_spawned do |agent|
