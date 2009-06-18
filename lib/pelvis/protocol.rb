@@ -43,11 +43,16 @@ module Pelvis
     end
 
     def presence_handlers
-      @presence_handlers ||= {}
+      @presence_handlers ||= Hash.new { |h,k| h[k] = [] }
+    end
+
+    def call_presence_handlers(ident, state)
+      return unless presence_handlers.key?(ident)
+      presence_handlers[ident].each { |b| b.call(ident,state) }
     end
 
     def subscribe_presence(identity, &block)
-      presence_handlers[identity] = block
+      presence_handlers[identity] << block
       handle_subscribe_presence(identity)
     end
 

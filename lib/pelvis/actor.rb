@@ -159,6 +159,5 @@ module Pelvis
     def resources_changed
       self.class.instance_eval "resources_changed"
     end
-
   end
 end

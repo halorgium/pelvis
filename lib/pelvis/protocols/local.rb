@@ -6,19 +6,22 @@ module Pelvis
       register :local
 
       SET = []
-      PRESENCE_HANDLERS = {}
+      PRESENCE_HANDLERS = Hash.new { |h,k| h[k] = [] }
 
       def connect
         logger.debug "connecting using #{self}: identity=#{identity.inspect}"
 
-        if presence_handlers[identity]
-          presence_handlers[identity].call(identity, :available)
-        end
+        call_presence_handlers(identity, :available)
 
         on_spawned do |agent|
           SET << agent
         end
         connected
+      end
+
+      def stop
+        SET.delete(identity)
+        call_presence_handlers(identity, :unavailable)
       end
 
       def evoke(identity, job)

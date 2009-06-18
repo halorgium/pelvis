@@ -38,6 +38,7 @@ module Pelvis
     end
 
     def connect(agent, &block)
+      raise "no such agent #{agent}" unless CONFIGS[agent]
       options = CONFIGS[agent].dup
       Pelvis.connect(PROTOCOL.registered_as, options, &block)
     end

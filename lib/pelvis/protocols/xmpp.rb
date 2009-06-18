@@ -44,10 +44,8 @@ module Pelvis
           when Blather::Stanza::Iq::Roster
             # ignore
           when Blather::Stanza::Presence::Status
-            logger.debug "Got presence announcement from #{stanza.from}"
-            if presence_handlers[stanza.from.to_s]
-              presence_handlers[stanza.from.to_s].call stanza.from, stanza.state
-            end
+            logger.debug "Got presence announcement from #{stanza.from} state #{stanza.state}"
+            call_presence_handlers stanza.from.to_s, stanza.state
           when Blather::Stanza::Presence::Subscription
             if stanza.subscribe?
               logger.debug "Got subscription request from #{stanza.from}"
@@ -97,6 +95,10 @@ module Pelvis
 
       def agents
         @agents ||= {}
+      end
+
+      def stop
+        @stream.instance_eval { stop }
       end
 
       def jid=(jid)
