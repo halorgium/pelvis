@@ -22,5 +22,26 @@ describe "A protocol" do
         }
       }
     end
+
+    if ENV['PROTOCOL'] = 'xmpp'
+      it "should call the block when the specified identity leaves" do
+        block = Proc.new { |id, status|
+          if status != :available
+            id.should == identity_for(:foo)
+            status.should == :unavailable
+            EM.stop
+          end
+        }
+
+        @agents = [[:herault]]
+        start_agents { |agent|
+          agent.protocol.subscribe_presence(identity_for(:foo), &block)
+          connect(:foo) { |foo_agent|
+            EM.add_timer(10) { raise "Didn't get subscription advertisement" }
+            foo_agent.protocol.stream.instance_eval { stop }
+          }
+        }
+      end
+    end
   end
 end
