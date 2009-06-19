@@ -5,6 +5,14 @@ module Pelvis
     include Logging
     extend Callbacks
 
+    def self.readvertise_wait_interval
+      @readvertise_wait_interval || 60
+    end
+
+    def self.readvertise_wait_interval=(amt)
+      @readvertise_wait_interval = amt
+    end
+
     callbacks :advertised
 
     def initialize(protocol)
@@ -14,6 +22,14 @@ module Pelvis
 
     def start
       logger.debug "Starting an agent: #{@protocol.inspect}"
+      if herault != identity
+        protocol.subscribe_presence(herault) do |id, state|
+          if state == :available and @advertised #should have sent our initial advertisement, we exit if we don't this prevents double initial ads
+            logger.warn "Herault joined, readvertising #{identity}"
+            actors.each { |a| EM.add_timer(rand(self.class.readvertise_wait_interval)) { readvertise(a) } }
+          end
+        end
+      end
     end
 
     def initial_job
@@ -93,16 +109,21 @@ module Pelvis
       it = actors.last
       it.on_resources_changed {
         logger.debug "got resources changed for #{it}, readvertising"
-        a = Advertiser.new(self, [it])
-        a.on_succeeded {
-          logger.debug "readvertisement successful"
-        }
-        a.on_failed {
-          logger.debug "readvertisement failed"
-        }
-        it.readvertised_with(a)
+        readvertise(it)
       }
       it
+    end
+
+    def readvertise(agent)
+      logger.warn "Readvertising #{agent}"
+      a = Advertiser.new(self, [agent])
+      a.on_succeeded {
+        logger.debug "readvertisement successful"
+      }
+      a.on_failed {
+        logger.debug "readvertisement failed"
+      }
+      agent.readvertised_with(a)
     end
 
     def advertise
@@ -114,7 +135,7 @@ module Pelvis
 
       # initial advertisement
       a = Advertiser.new(self, actors)
-      a.on_succeeded { advertised }
+      a.on_succeeded { @advertised = true; advertised }
       a.on_failed { raise "unable to perform advertisement" }
     end
 

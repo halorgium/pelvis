@@ -6,14 +6,10 @@ class Chained < Pelvis::Actor
     results = ProxyBack.new(self)
     # FIXME: changing from a timer to a 10.times loop breaks the following
     # it appears to be an issue with blather's handling of the message from jabber
-    timer = EM::PeriodicTimer.new(1) {
+    10.times do |number|
       send_data :message => "requesting inner #{number}"
       request(:all, "/inner", {:number => number}, :delegate => results)
-      number -= 1
-      if number <= 0
-        timer.cancel
-      end
-    }
+    end
   end
 
   class ProxyBack

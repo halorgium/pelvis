@@ -13,7 +13,7 @@ require File.dirname(__FILE__) + '/examples/delegates/debugger'
 
 if ENV["DEBUGGER"]
   Pelvis.logger.level = Logger::DEBUG
-  Blather::LOG.level = Logger::DEBUG
+  #Blather::LOG.level = Logger::DEBUG
 end
 
 def connect_herault
@@ -54,8 +54,8 @@ def connect_bar
     agent.on_advertised do
       puts "bar is ready"
 
-      agent.request(:all, "/do/random", {}, :delegate => Debugger.new)
-      agent.request(:all, "/chained", {}, :delegate => Debugger.new)
+      agent.request(:all, "/do/random", {}, :delegate => Debugger.new('RANDOM'))
+      agent.request(:all, "/chained", {}, :delegate => Debugger.new('CHAINED'))
     end
   end
 end

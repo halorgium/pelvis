@@ -44,12 +44,12 @@ module Pelvis
           when Blather::Stanza::Iq::Roster
             # ignore
           when Blather::Stanza::Presence::Status
-            logger.debug "Got presence announcement from #{stanza.from} state #{stanza.state}"
+            logger.debug "#{identity} Got presence announcement from #{stanza.from} state #{stanza.state}"
             call_presence_handlers stanza.from.to_s, stanza.state
           when Blather::Stanza::Presence::Subscription
             if stanza.subscribe?
               logger.debug "Got subscription request from #{stanza.from}"
-              val = if stanza.from.stripped == herault_jid.stripped
+              val = if stanza.from.stripped == herault_jid.stripped || identity == herault
                       logger.warn "Approving subscription request from #{stanza.from}"
                       stanza.approve!
                     else

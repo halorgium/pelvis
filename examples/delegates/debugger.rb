@@ -1,5 +1,10 @@
 class Debugger
   include Pelvis::Delegate
+  attr_accessor :name
+
+  def initialize(name='')
+    @name = name
+  end
 
   def received(data)
     log "Received data: #{data.inspect}"
@@ -14,7 +19,7 @@ class Debugger
   end
 
   def log(message)
-    puts "%0.7f: %s" % [Time.now.to_f, message]
+    puts "%0.7f: #{name} - %s" % [Time.now.to_f, message]
   end
 end
 
