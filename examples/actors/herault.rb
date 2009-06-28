@@ -48,7 +48,7 @@ class Herault < Pelvis::Actor
       if need_resources.empty? && !resources
         ident
       elsif resources
-        need_resources & resources ? ident : nil
+        (need_resources & resources).empty? ? nil : ident
       else
         nil
       end
